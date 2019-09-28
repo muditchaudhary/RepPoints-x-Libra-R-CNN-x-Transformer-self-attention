@@ -20,7 +20,7 @@ class PointAssigner(BaseAssigner):
         self.pos_num = pos_num
 
     def assign(self, points, gt_bboxes, gt_bboxes_ignore=None, gt_labels=None):
-        """Assign gt to points.
+        """Assign gt to points. (gt= ground truth) (bbox = bounding box)
 
         This method assign a gt bbox to every points set, each points set
         will be assigned with  0, or a positive number.
@@ -47,10 +47,10 @@ class PointAssigner(BaseAssigner):
         """
         if points.shape[0] == 0 or gt_bboxes.shape[0] == 0:
             raise ValueError('No gt or bboxes')
-        points_xy = points[:, :2]
-        points_stride = points[:, 2]
+        points_xy = points[:, :2]   # Get the x,y coordinates
+        points_stride = points[:, 2] # Get the stride
         points_lvl = torch.log2(
-            points_stride).int()  # [3...,4...,5...,6...,7...]
+            points_stride).int()  # [3...,4...,5...,6...,7...] In FPN the strides are exponents of 2. So, level = log2(stride)
         lvl_min, lvl_max = points_lvl.min(), points_lvl.max()
         num_gts, num_points = gt_bboxes.shape[0], points.shape[0]
 
@@ -71,7 +71,7 @@ class PointAssigner(BaseAssigner):
         for idx in range(num_gts):
             gt_lvl = gt_bboxes_lvl[idx]
             # get the index of points in this level
-            lvl_idx = gt_lvl == points_lvl
+            lvl_idx = gt_lvl == points_lvl  # Won't this evaluate to a boolean?
             points_index = points_range[lvl_idx]
             # get the points in this level
             lvl_points = points_xy[lvl_idx, :]
