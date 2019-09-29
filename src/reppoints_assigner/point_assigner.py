@@ -20,7 +20,7 @@ class PointAssigner(BaseAssigner):
         self.pos_num = pos_num
 
     def assign(self, points, gt_bboxes, gt_bboxes_ignore=None, gt_labels=None):
-        """Assign gt to points. (gt= ground truth) (bbox = bounding box)
+        """Assign gt to points.
 
         This method assign a gt bbox to every points set, each points set
         will be assigned with  0, or a positive number.
@@ -44,20 +44,30 @@ class PointAssigner(BaseAssigner):
 
         Returns:
             :obj:`AssignResult`: The assign result.
+
+        PS: Tensor is a data type
         """
         if points.shape[0] == 0 or gt_bboxes.shape[0] == 0:
             raise ValueError('No gt or bboxes')
-        points_xy = points[:, :2]   # Get the x,y coordinates
-        points_stride = points[:, 2] # Get the stride
+
+        # Choose every alternating point (row-wise and column-wise)
+        points_xy = points[:, :2]
+
+        points_stride = points[:, 2]
         points_lvl = torch.log2(
-            points_stride).int()  # [3...,4...,5...,6...,7...] In FPN the strides are exponents of 2. So, level = log2(stride)
+            points_stride).int()  # [3...,4...,5...,6...,7...]
         lvl_min, lvl_max = points_lvl.min(), points_lvl.max()
         num_gts, num_points = gt_bboxes.shape[0], points.shape[0]
 
         # assign gt box
         gt_bboxes_xy = (gt_bboxes[:, :2] + gt_bboxes[:, 2:]) / 2
+
+        # Clips all the elements in input with a minimum range and results in a Tensor
         gt_bboxes_wh = (gt_bboxes[:, 2:] - gt_bboxes[:, :2]).clamp(min=1e-6)
+
         scale = self.scale
+
+        # Clamps the ground truth box levels for the backbone between minimum and maximum
         gt_bboxes_lvl = ((torch.log2(gt_bboxes_wh[:, 0] / scale) +
                           torch.log2(gt_bboxes_wh[:, 1] / scale)) / 2).int()
         gt_bboxes_lvl = torch.clamp(gt_bboxes_lvl, min=lvl_min, max=lvl_max)
@@ -71,33 +81,45 @@ class PointAssigner(BaseAssigner):
         for idx in range(num_gts):
             gt_lvl = gt_bboxes_lvl[idx]
             # get the index of points in this level
-            lvl_idx = gt_lvl == points_lvl  # Won't this evaluate to a boolean?
+            lvl_idx = gt_lvl == points_lvl
             points_index = points_range[lvl_idx]
+
             # get the points in this level
+            """ points_xy are in a matrix structure with each row representing a level
+            and colums representing the points in that level """
             lvl_points = points_xy[lvl_idx, :]
+
             # get the center point of gt
             gt_point = gt_bboxes_xy[[idx], :]
             # get width and height of gt
             gt_wh = gt_bboxes_wh[[idx], :]
+
             # compute the distance between gt center and
             #   all points in this level
             points_gt_dist = ((lvl_points - gt_point) / gt_wh).norm(dim=1)
+
             # find the nearest k points to gt center in this level
             min_dist, min_dist_index = torch.topk(
                 points_gt_dist, self.pos_num, largest=False)
+
             # the index of nearest k points to gt center in this level
             min_dist_points_index = points_index[min_dist_index]
+
             # The less_than_recorded_index stores the index
             #   of min_dist that is less then the assigned_gt_dist. Where
             #   assigned_gt_dist stores the dist from previous assigned gt
             #   (if exist) to each point.
+
+            """ less_than_recorded_index stores the new min_dist_points_index """
             less_than_recorded_index = min_dist < assigned_gt_dist[
                 min_dist_points_index]
+
             # The min_dist_points_index stores the index of points satisfy:
             #   (1) it is k nearest to current gt center in this level.
             #   (2) it is closer to current gt center than other gt center.
             min_dist_points_index = min_dist_points_index[
                 less_than_recorded_index]
+
             # assign the result
             assigned_gt_inds[min_dist_points_index] = idx + 1
             assigned_gt_dist[min_dist_points_index] = min_dist[
