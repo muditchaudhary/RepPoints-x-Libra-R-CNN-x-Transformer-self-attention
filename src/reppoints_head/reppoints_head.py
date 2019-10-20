@@ -61,6 +61,7 @@ class RepPointsHead(nn.Module):
                  center_init=True,
                  transform_method='moment',
                  moment_mul=0.01):
+                 
         super(RepPointsHead, self).__init__()
         self.in_channels = in_channels
         self.num_classes = num_classes
@@ -81,22 +82,30 @@ class RepPointsHead(nn.Module):
         self.use_grid_points = use_grid_points
         self.center_init = center_init
         self.transform_method = transform_method
+
         if self.transform_method == 'moment':
             self.moment_transfer = nn.Parameter(
                 data=torch.zeros(2), requires_grad=True)
             self.moment_mul = moment_mul
+
+        #! why do we decrease the cls_out_channels by 1 when using sigmoid?
         if self.use_sigmoid_cls:
             self.cls_out_channels = self.num_classes - 1
         else:
             self.cls_out_channels = self.num_classes
+
+        #Generate an array of PointGenerator objects for each point_strides. What does point generator do? It has no constructor method.
         self.point_generators = [PointGenerator() for _ in self.point_strides]
+        
         # we use deformable conv to extract points features
         self.dcn_kernel = int(np.sqrt(num_points))
         self.dcn_pad = int((self.dcn_kernel - 1) / 2)
+
         assert self.dcn_kernel * self.dcn_kernel == num_points, \
             "The points number should be a square number."
         assert self.dcn_kernel % 2 == 1, \
             "The points number should be an odd square number."
+        
         dcn_base = np.arange(-self.dcn_pad,
                              self.dcn_pad + 1).astype(np.float64)
         dcn_base_y = np.repeat(dcn_base, self.dcn_kernel)
@@ -406,9 +415,9 @@ class RepPointsHead(nn.Module):
         return loss_cls, loss_pts_init, loss_pts_refine
 
     def loss(self,
-             cls_scores,
-             pts_preds_init,
-             pts_preds_refine,
+             ts_preds_init,
+             pts_cls_scores,
+             ppreds_refine,
              gt_bboxes,
              gt_labels,
              img_metas,

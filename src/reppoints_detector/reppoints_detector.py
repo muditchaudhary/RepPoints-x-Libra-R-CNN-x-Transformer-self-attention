@@ -28,7 +28,7 @@ class RepPointsDetector(SingleStageDetector):
         """Merge augmented detection bboxes and scores.
 
         Args:
-            aug_bboxes (list[Tensor]): shape (n, 4*#class)
+            aug_bboxes (list[Tensor]): shape (n, 4*#class) 
             aug_scores (list[Tensor] or None): shape (n, #class)
             img_shapes (list[Tensor]): shape (3, ).
 

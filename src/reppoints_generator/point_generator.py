@@ -2,10 +2,18 @@ import torch
 
 
 class PointGenerator(object):
+    """
+    Used in reppoints_head.py
+    """
 
     def _meshgrid(self, x, y, row_major=True):
-        xx = x.repeat(len(y))
-        yy = y.view(-1, 1).repeat(1, len(x)).view(-1)
+        """
+        Args:
+        x (Tensor): shape-->one-dimensional ([n])
+        y (Tensor): shape-->
+        """
+        xx = x.repeat(len(y)) #torch.tensor.repeat, repeats the tensor n times maintains the dimenstionality
+        yy = y.view(-1, 1).repeat(1, len(x)).view(-1) #view reshapes the array
         if row_major:
             return xx, yy
         else:

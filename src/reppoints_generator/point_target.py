@@ -15,10 +15,10 @@ def point_target(proposals_list,
                  sampling=True,
                  unmap_outputs=True):
     """Compute corresponding GT box and classification targets for proposals.
-
+        Used in reppoints_head.py
     Args:
         points_list (list[list]): Multi level points of each image.
-        valid_flag_list (list[list]): Multi level valid flags of each image.
+        valid_flag_list (list[list]): Multi level valid flags of each image. !! Flags?
         gt_bboxes_list (list[Tensor]): Ground truth bboxes of each image.
         img_metas (list[dict]): Meta info of each image.
         cfg (dict): train sample configs.
@@ -158,7 +158,9 @@ def unmap(data, count, inds, fill=0):
     if data.dim() == 1:
         ret = data.new_full((count, ), fill)
         ret[inds] = data
-    else:
+    else:0):
+ta)
+, )
         new_size = (count, ) + data.size()[1:]
         ret = data.new_full(new_size, fill)
         ret[inds, :] = data
