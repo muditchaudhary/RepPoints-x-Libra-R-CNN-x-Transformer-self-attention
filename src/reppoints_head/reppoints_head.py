@@ -116,11 +116,19 @@ class RepPointsHead(nn.Module):
         self._init_layers()
 
     def _init_layers(self):
+        """
+        Initializing the layers of the head. As given in Figure 3. of the paper
+        """
+
         self.relu = nn.ReLU(inplace=True)
         self.cls_convs = nn.ModuleList()
         self.reg_convs = nn.ModuleList()
+
+        ## Stacking the first 3 convolution layer in the head
         for i in range(self.stacked_convs):
+            # For i=0 it is attached to the FPN, so channels = in_channels
             chn = self.in_channels if i == 0 else self.feat_channels
+            #Stacking 3 convolutions for the classification head
             self.cls_convs.append(
                 ConvModule(
                     chn,
@@ -130,6 +138,7 @@ class RepPointsHead(nn.Module):
                     padding=1,
                     conv_cfg=self.conv_cfg,
                     norm_cfg=self.norm_cfg))
+            #Stacking 3 convolutions for the regression head
             self.reg_convs.append(
                 ConvModule(
                     chn,
@@ -139,25 +148,42 @@ class RepPointsHead(nn.Module):
                     padding=1,
                     conv_cfg=self.conv_cfg,
                     norm_cfg=self.norm_cfg))
+        
+        #! What is grid_points and how does it affect the pts_out_dim
         pts_out_dim = 4 if self.use_grid_points else 2 * self.num_points
+
+        # Deformable convolution for classification layer
         self.reppoints_cls_conv = DeformConv(self.feat_channels,
                                              self.point_feat_channels,
                                              self.dcn_kernel, 1, self.dcn_pad)
+        
+        # Output convolution for the classification layer                                     
         self.reppoints_cls_out = nn.Conv2d(self.point_feat_channels,
                                            self.cls_out_channels, 1, 1, 0)
+        
+        #Regression layer initial convolution
         self.reppoints_pts_init_conv = nn.Conv2d(self.feat_channels,
                                                  self.point_feat_channels, 3,
                                                  1, 1)
+        
+        #Regression layer initial RepPoint convolutions
         self.reppoints_pts_init_out = nn.Conv2d(self.point_feat_channels,
                                                 pts_out_dim, 1, 1, 0)
+        
+        #Deformable convolution for refinement stage of the regression head
         self.reppoints_pts_refine_conv = DeformConv(self.feat_channels,
                                                     self.point_feat_channels,
                                                     self.dcn_kernel, 1,
                                                     self.dcn_pad)
+        
+        #Convolution for the refined output of the regression head
         self.reppoints_pts_refine_out = nn.Conv2d(self.point_feat_channels,
                                                   pts_out_dim, 1, 1, 0)
 
     def init_weights(self):
+        """
+        Weight initializtions for the RepPoints head 
+        """
         for m in self.cls_convs:
             normal_init(m.conv, std=0.01)
         for m in self.reg_convs:
@@ -235,6 +261,7 @@ class RepPointsHead(nn.Module):
                previous_boxes[:, :2, ...]).clamp(min=1e-6)
         grid_topleft = bxy + bwh * reg[:, :2, ...] - 0.5 * bwh * torch.exp(
             reg[:, 2:, ...])
+        from IPython import embed;embed()
         grid_wh = bwh * torch.exp(reg[:, 2:, ...])
         grid_left = grid_topleft[:, [0], ...]
         grid_top = grid_topleft[:, [1], ...]
