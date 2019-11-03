@@ -123,8 +123,9 @@ void shape_check(at::Tensor input, at::Tensor offset, at::Tensor *gradOutput,
            "invalid number of input planes, expected: %d, but got: %d",
            nInputPlane, input.size(1));
 
-  AT_CHECK((inputHeight >= kH && inputWidth >= kW),
-           "input image is smaller than kernel");
+// Commented as specified in https://github.com/open-mmlab/mmdetection/issues/1453#issuecomment-538602013
+//  AT_CHECK((inputHeight >= kH && inputWidth >= kW),
+//          "input image is smaller than kernel");
 
   AT_CHECK((offset.size(2) == outputHeight && offset.size(3) == outputWidth),
            "invalid spatial size of offset, expected height: %d width: %d, but "
