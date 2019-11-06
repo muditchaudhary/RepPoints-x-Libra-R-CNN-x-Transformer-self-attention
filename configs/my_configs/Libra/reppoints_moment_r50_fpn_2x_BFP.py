@@ -3,30 +3,30 @@ norm_cfg = dict(type='GN', num_groups=32, requires_grad=True)
 
 model = dict(
     type='RepPointsDetector',
-    pretrained='modelzoo://resnet101',
+    pretrained='modelzoo://resnet50',
     backbone=dict(
         type='ResNet',
-        depth=101,
+        depth=50,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         style='pytorch'),
     neck=[
         dict(
-            type='FPN',
-            in_channels=[256, 512, 1024, 2048],
-            out_channels=256,
-            start_level=1,
-            add_extra_convs=True,
-            num_outs=5,
-            norm_cfg=norm_cfg),
+        type='FPN',
+        in_channels=[256, 512, 1024, 2048],
+        out_channels=256,
+        start_level=1,
+        add_extra_convs=True,
+        num_outs=5,
+        norm_cfg=norm_cfg),
         dict(
             type='BFP',
             in_channels=256,
             num_levels=5,
             refine_level=2,
             refine_type='non_local')
-            ],
+    ],
     bbox_head=dict(
         type='RepPointsHead',
         num_classes=81,
@@ -40,13 +40,12 @@ model = dict(
         point_base_scale=4,
         norm_cfg=norm_cfg,
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-        loss_bbox=dict(
-            type='BalancedL1Loss',
-            alpha=0.5,
-            gamma=1.5,
-            beta=1.0,
+            type='FocalLoss',
+            use_sigmoid=True,
+            gamma=2.0,
+            alpha=0.25,
             loss_weight=1.0),
+        loss_bbox_init=dict(type='SmoothL1Loss', beta=0.11, loss_weight=0.5),
         loss_bbox_refine=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
         transform_method='moment'))
 # training and testing settings
@@ -84,8 +83,7 @@ data = dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/instances_train2017.json',
         img_prefix=data_root + 'train2017/',
-        multiscale_mode='range',
-        img_scale=[(1600, 400), (1600, 1400)],
+        img_scale=(1333, 800),
         img_norm_cfg=img_norm_cfg,
         size_divisor=32,
         flip_ratio=0.5,
@@ -107,16 +105,16 @@ data = dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/instances_val2017.json',
         img_prefix=data_root + 'val2017/',
-        img_scale=[(1333, 400), (1333, 600), (1333, 800), (1666, 1000), (2000, 1200), (2333, 1400)],
+        img_scale=(1333, 800),
         img_norm_cfg=img_norm_cfg,
         size_divisor=32,
-        flip_ratio=0.5,
+        flip_ratio=0,
         with_mask=False,
         with_crowd=False,
         with_label=False,
         test_mode=True))
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
@@ -135,12 +133,12 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 24
-device_ids = range(8)
+total_epochs = 12
+device_ids = range(5)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/reppoints_moment_r101_fpn_2x_mt'
+work_dir = './work_dirs/reppoints_moment_r50_fpn_2x_BFP'
 load_from = None
-resume_from = None
+resume_from = None #'./work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu/latest.pth'
 auto_resume = True
 workflow = [('train', 1)]
