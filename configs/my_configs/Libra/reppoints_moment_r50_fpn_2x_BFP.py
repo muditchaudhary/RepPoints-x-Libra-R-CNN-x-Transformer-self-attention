@@ -139,6 +139,6 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/reppoints_moment_r50_fpn_2x_BFP'
 load_from = None
-resume_from = None #'./work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu/latest.pth'
+resume_from = './work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu_BFP/latest.pth'
 auto_resume = True
 workflow = [('train', 1)]
