@@ -309,6 +309,7 @@ class RepPointsHead(nn.Module):
         else:
             pts_out_init = pts_out_init + points_init
         # refine and classify reppoints
+        #gradient mul is to not include the pts_out_init tensor in the gradient calculation for classification.
         pts_out_init_grad_mul = (1 - self.gradient_mul) * pts_out_init.detach(
         ) + self.gradient_mul * pts_out_init
         dcn_offset = pts_out_init_grad_mul - dcn_base_offset

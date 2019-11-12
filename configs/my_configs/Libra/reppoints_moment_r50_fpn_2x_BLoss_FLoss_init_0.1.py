@@ -35,7 +35,7 @@ model = dict(
         point_feat_channels=256,
         stacked_convs=3,
         num_points=9,
-        gradient_mul=0.1,
+        gradient_mul=0.1,       #Gradient Multiplier for balancing
         point_strides=[8, 16, 32, 64, 128],
         point_base_scale=4,
         norm_cfg=norm_cfg,
@@ -45,7 +45,7 @@ model = dict(
             gamma=2.0,
             alpha=0.25,
             loss_weight=1.0),
-        loss_bbox_init=dict(type='SmoothL1Loss', beta=0.11, loss_weight=0.5),
+        loss_bbox_init=dict(type='BalancedL1Loss', alpha = 0.5,beta=1.0,gamma=1.5, loss_weight=1.0),
         loss_bbox_refine=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
         transform_method='moment'))
 # training and testing settings
