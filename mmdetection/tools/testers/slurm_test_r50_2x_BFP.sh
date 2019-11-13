@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
+
 source ../../anaconda3/etc/profile.d/conda.sh
 conda activate pytorch12
 set -x
 
 PARTITION=gpu_2h
-JOB_NAME=reppoints_moment_r50_fpn_2x_FYP
-CONFIG=./configs/my_configs/reppoints_moment_r50_fpn_2x.py
-WORK_DIR=./work_dirs/reppoints_moment_r50_fpn_2x_train_1
-GPUS=${5:-1}
-GPUS_PER_NODE=${GPUS_PER_NODE:-1}
+JOB_NAME=reppoints_test
+CONFIG=./configs/my_configs/Libra/reppoints_moment_r50_fpn_2x_BFP.py
+CHECKPOINT=./work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu_BFP/latest.pth
+GPUS=${5:-4}
+GPUS_PER_NODE=${GPUS_PER_NODE:-4}
 CPUS_PER_TASK=${CPUS_PER_TASK:-5}
+#PY_ARGS=${@:5}
 SRUN_ARGS=${SRUN_ARGS:-""}
-PY_ARGS=${PY_ARGS:-"--validate"}
-# NOTE: first stage train 12 epoches
 
 srun -p ${PARTITION} \
     --job-name=${JOB_NAME} \
@@ -22,5 +22,5 @@ srun -p ${PARTITION} \
     --cpus-per-task=${CPUS_PER_TASK} \
     --kill-on-bad-exit=1 \
     ${SRUN_ARGS} \
-    python -u ./mmdetection/tools/train.py ${CONFIG} --work_dir=${WORK_DIR} --launcher="slurm" 
+    python -u ./mmdetection/tools/test.py ${CONFIG} ${CHECKPOINT} --launcher="slurm" --out "./work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu_BFP/results.pkl" --eval "bbox"
     #${PY_ARGS}

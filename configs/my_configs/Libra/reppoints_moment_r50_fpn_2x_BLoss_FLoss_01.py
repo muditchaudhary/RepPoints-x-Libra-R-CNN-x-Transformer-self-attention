@@ -11,8 +11,7 @@ model = dict(
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         style='pytorch'),
-    neck=[
-        dict(
+    neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
@@ -20,13 +19,6 @@ model = dict(
         add_extra_convs=True,
         num_outs=5,
         norm_cfg=norm_cfg),
-        dict(
-            type='BFP',
-            in_channels=256,
-            num_levels=5,
-            refine_level=2,
-            refine_type='non_local')
-    ],
     bbox_head=dict(
         type='RepPointsHead',
         num_classes=81,
@@ -35,7 +27,7 @@ model = dict(
         point_feat_channels=256,
         stacked_convs=3,
         num_points=9,
-        gradient_mul=0.1,       #Gradient Multiplier for balancing
+        gradient_mul=0.1,
         point_strides=[8, 16, 32, 64, 128],
         point_base_scale=4,
         norm_cfg=norm_cfg,
@@ -45,7 +37,12 @@ model = dict(
             gamma=2.0,
             alpha=0.25,
             loss_weight=1.0),
-        loss_bbox_init=dict(type='BalancedL1Loss', alpha = 0.5,beta=1.0,gamma=1.5, loss_weight=1.0),
+        loss_bbox_init=dict(
+            type='BalancedL1Loss',
+            alpha=0.5,
+            gamma=1.5,
+            beta=1.0,
+            loss_weight=1.0),
         loss_bbox_refine=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
         transform_method='moment'))
 # training and testing settings
@@ -137,8 +134,8 @@ total_epochs = 12
 device_ids = range(5)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/reppoints_moment_r50_fpn_2x_BFP'
+work_dir = './work_dirs/reppoints_moment_r50_fpn_2x'
 load_from = None
-resume_from = './work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu_BFP/latest.pth'
+resume_from = None #'./work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu_12epoch/latest.pth'
 auto_resume = True
 workflow = [('train', 1)]
