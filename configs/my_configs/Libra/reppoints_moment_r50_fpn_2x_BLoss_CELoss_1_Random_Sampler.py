@@ -47,15 +47,16 @@ model = dict(
 train_cfg = dict(
     init=dict(
         assigner=dict(type='PointAssigner', scale=4, pos_num=1),
-        allowed_border=-1,
-        pos_weight=-1,
-        debug=False),
         sampler=dict(
             type='RandomSampler',
             num=512,
             pos_fraction=0.25,
             neg_pos_ub=-1,
             add_gt_as_proposals=True),
+        allowed_border=-1,
+        pos_weight=-1,
+        debug=False),
+        
     refine=dict(
         assigner=dict(
             type='MaxIoUAssigner',

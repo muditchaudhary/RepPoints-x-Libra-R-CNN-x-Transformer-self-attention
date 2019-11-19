@@ -22,5 +22,5 @@ srun -p ${PARTITION} \
     --cpus-per-task=${CPUS_PER_TASK} \
     --kill-on-bad-exit=1 \
     ${SRUN_ARGS} \
-    python -u ./mmdetection/tools/test.py ${CONFIG} ${CHECKPOINT} --launcher="slurm" --out "./work_dirs/reppoints_moment_r50_fpn_2x_BLoss_FLoss_0.1/results.pkl" --eval "bbox"
+    python -u ./mmdetection/tools/test.py ${CONFIG} ${CHECKPOINT} --launcher="slurm" --out "./work_dirs/reppoints_moment_r50_fpn_2x_BLoss_FLoss_1/results.pkl" --eval "bbox"
     #${PY_ARGS}
