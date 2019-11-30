@@ -478,6 +478,7 @@ class RepPointsHead(nn.Module):
             gt_labels_list=gt_labels,
             label_channels=label_channels,
             sampling=self.sampling)
+            
         (*_, bbox_gt_list_init, candidate_list_init, bbox_weights_list_init,
          num_total_pos_init, num_total_neg_init) = cls_reg_targets_init
         num_total_samples_init = (
@@ -501,6 +502,7 @@ class RepPointsHead(nn.Module):
                 bbox.append(bbox_center +
                             bbox_shift[i_img].permute(1, 2, 0).reshape(-1, 4))
             bbox_list.append(bbox)
+        
         cls_reg_targets_refine = point_target(
             bbox_list,
             valid_flag_list,
