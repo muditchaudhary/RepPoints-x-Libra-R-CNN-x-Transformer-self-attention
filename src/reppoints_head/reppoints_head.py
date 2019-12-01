@@ -261,7 +261,7 @@ class RepPointsHead(nn.Module):
                previous_boxes[:, :2, ...]).clamp(min=1e-6)
         grid_topleft = bxy + bwh * reg[:, :2, ...] - 0.5 * bwh * torch.exp(
             reg[:, 2:, ...])
-        from IPython import embed;embed()
+        #from IPython import embed;embed()
         grid_wh = bwh * torch.exp(reg[:, 2:, ...])
         grid_left = grid_topleft[:, [0], ...]
         grid_top = grid_topleft[:, [1], ...]
