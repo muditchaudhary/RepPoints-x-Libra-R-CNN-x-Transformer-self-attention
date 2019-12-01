@@ -434,7 +434,7 @@ class RepPointsHead(nn.Module):
             bbox_list = self.centers_to_bboxes(center_list)
             candidate_list = bbox_list
         
-        from IPython import embed; embed();
+        #from IPython import embed; embed();
         cls_reg_targets_init = point_target(
             candidate_list,
             valid_flag_list,
@@ -469,7 +469,7 @@ class RepPointsHead(nn.Module):
                             bbox_shift[i_img].permute(1, 2, 0).reshape(-1, 4))
             bbox_list.append(bbox)
 
-        from IPython import embed; embed();
+        #from IPython import embed; embed();
         cls_reg_targets_refine = point_target(
             bbox_list,
             valid_flag_list,
