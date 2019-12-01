@@ -102,7 +102,7 @@ def point_target_single(flat_proposals,
     # assign gt and sample proposals
     proposals = flat_proposals[inside_flags, :]
 
-    from IPython import embed; embed();
+ 
     if sampling:
         assign_result, sampling_result = assign_and_sample(
             proposals, gt_bboxes, gt_bboxes_ignore, None, cfg)
