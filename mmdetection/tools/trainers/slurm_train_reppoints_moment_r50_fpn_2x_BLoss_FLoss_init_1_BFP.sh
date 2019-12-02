@@ -3,7 +3,7 @@ source ../../anaconda3/etc/profile.d/conda.sh
 conda activate pytorch12 #specify conda environment
 set -x
 
-PARTITION=gpu_24h   #specify gpu time 2h, 8h, 24h
+PARTITION=gpu_8h   #specify gpu time 2h, 8h, 24h
 JOB_NAME=reppoints_moment_r50_fpn_2x_BLoss1_BFP #job name can be anything   
 CONFIG=./configs/my_configs/Libra/reppoints_moment_r50_fpn_2x_BLoss_FLoss_1_BFP.py #specify the config file
 WORK_DIR=./work_dirs/reppoints_moment_r50_fpn_2x_BLoss_FLoss_1_BFP #where to save the models
