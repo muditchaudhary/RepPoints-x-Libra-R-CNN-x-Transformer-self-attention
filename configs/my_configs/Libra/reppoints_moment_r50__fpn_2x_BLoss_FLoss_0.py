@@ -27,7 +27,7 @@ model = dict(
         point_feat_channels=256,
         stacked_convs=3,
         num_points=9,
-        gradient_mul=1, #No points detached?
+        gradient_mul=0, #No points detached?
         point_strides=[8, 16, 32, 64, 128],
         point_base_scale=4,
         norm_cfg=norm_cfg,
@@ -136,6 +136,6 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/reppoints_moment_r50_fpn_2x'
 load_from = None
-resume_from = './work_dirs/reppoints_moment_r50_fpn_2x_BLoss_FLoss_1/latest.pth'
+resume_from = None
 auto_resume = True
 workflow = [('train', 1)]
