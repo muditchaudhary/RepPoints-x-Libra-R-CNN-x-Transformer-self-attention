@@ -428,13 +428,15 @@ class RepPointsHead(nn.Module):
             # Assign target for center list
             candidate_list = center_list
         else:
-
             # transform center list to bbox list and
             #   assign target for bbox list
             bbox_list = self.centers_to_bboxes(center_list)
             candidate_list = bbox_list
-        
-        #from IPython import embed; embed();
+
+        print("Debug Stage: reppoints_head | Before point_target")
+        print("Test tbd: candidate_list & gt_bboxes")
+        from IPython import embed; embed();
+
         cls_reg_targets_init = point_target(
             candidate_list,
             valid_flag_list,
