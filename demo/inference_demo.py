@@ -6,7 +6,7 @@ import mmcv
 config_file = sys.argv[1]
 checkpoint_file = sys.argv[2]
 
-outfile_path = './results/'+ config_file +'/'
+outfile_path = './BLoss_FLoss0' +'/'
 
 model = init_detector(config_file,checkpoint_file)
 
