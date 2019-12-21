@@ -5,7 +5,7 @@ import mmcv
 
 config_file = sys.argv[1]
 checkpoint_file = sys.argv[2]
-out_file = sys.argv[3]
+
 
 model = init_detector(config_file,checkpoint_file)
 
