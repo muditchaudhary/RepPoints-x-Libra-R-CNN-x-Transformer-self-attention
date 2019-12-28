@@ -28,6 +28,12 @@ def assign_and_sample(bboxes, gt_bboxes, gt_bboxes_ignore, gt_labels, cfg):
     bbox_sampler = build_sampler(cfg.sampler)
     assign_result = bbox_assigner.assign(bboxes, gt_bboxes, gt_bboxes_ignore,
                                          gt_labels)
+
+    print("-##--##-- DEBUGGER STATEMENT --##--##-")
+    print("Test 'assign_result' | Expected output : Shouldn't be NoneType")
+    print("File: assign_sampling")
+    from IPython import embed; embed()
+
     sampling_result = bbox_sampler.sample(assign_result, bboxes, gt_bboxes,
                                           gt_labels)
     return assign_result, sampling_result

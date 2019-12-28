@@ -57,6 +57,13 @@ class BaseSampler(metaclass=ABCMeta):
             gt_ones = bboxes.new_ones(gt_bboxes.shape[0], dtype=torch.uint8)
             gt_flags = torch.cat([gt_ones, gt_flags])
 
+        print("-##--##-- DEBUGGER STATEMENT --##--##-")
+        print("Test \'assign_result\' | Expected output : Shouldn't be NoneType")
+        print("File: base_sampler")
+        print("Position: After block \'if self.add_gt_as _proposals\'")
+        from IPython import embed;
+        embed()
+
         num_expected_pos = int(self.num * self.pos_fraction)
         pos_inds = self.pos_sampler._sample_pos(
             assign_result, num_expected_pos, bboxes=bboxes, **kwargs)
