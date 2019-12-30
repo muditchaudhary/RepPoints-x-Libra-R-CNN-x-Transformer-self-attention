@@ -57,10 +57,13 @@ class BaseSampler(metaclass=ABCMeta):
             gt_ones = bboxes.new_ones(gt_bboxes.shape[0], dtype=torch.uint8)
             gt_flags = torch.cat([gt_ones, gt_flags])
 
+            print("In block : if self.add_gt_as_proposals")
+
         print("-##--##-- DEBUGGER STATEMENT --##--##-")
         print("Test \'assign_result\' | Expected output : Shouldn't be NoneType")
         print("File: base_sampler")
-        print("Position: After block \'if self.add_gt_as _proposals\'")
+        print("Position: After block \'if self.add_gt_as_proposals\'")
+        print("For Pseudosampler, check value: add_gt_as_proposals")
         from IPython import embed;
         embed()
 
