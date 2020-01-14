@@ -471,6 +471,7 @@ class RepPointsHead(nn.Module):
                             bbox_shift[i_img].permute(1, 2, 0).reshape(-1, 4))
             bbox_list.append(bbox)
 
+        #Refine stage sampling = None
         #from IPython import embed; embed();
         cls_reg_targets_refine = point_target(
             bbox_list,
@@ -481,7 +482,7 @@ class RepPointsHead(nn.Module):
             gt_bboxes_ignore_list=gt_bboxes_ignore,
             gt_labels_list=gt_labels,
             label_channels=label_channels,
-            sampling=self.sampling)
+            sampling=None)
         (labels_list, label_weights_list, bbox_gt_list_refine,
          candidate_list_refine, bbox_weights_list_refine, num_total_pos_refine,
          num_total_neg_refine) = cls_reg_targets_refine
