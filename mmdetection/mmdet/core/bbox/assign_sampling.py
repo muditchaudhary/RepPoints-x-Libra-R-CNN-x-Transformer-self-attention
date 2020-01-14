@@ -25,15 +25,17 @@ def build_sampler(cfg, **kwargs):
 
 def assign_and_sample(bboxes, gt_bboxes, gt_bboxes_ignore, gt_labels, cfg):
     bbox_assigner = build_assigner(cfg.assigner)
-    print("-##--##-- DEBUGGER STATEMENT --##--##-")
+    print("-##--##-- DEBUGGER STATEMENT 1--##--##-")
+    print("File: assign_sampling")
     print("Check cfg for sampler")
+    print(cfg)
     from IPython import embed;
     embed()
     bbox_sampler = build_sampler(cfg.sampler)
     assign_result = bbox_assigner.assign(bboxes, gt_bboxes, gt_bboxes_ignore,
                                          gt_labels)
 
-    print("-##--##-- DEBUGGER STATEMENT --##--##-")
+    print("-##--##-- DEBUGGER STATEMENT 2--##--##-")
     print("Test 'assign_result' | Expected output : Shouldn't be NoneType")
     print("File: assign_sampling")
     from IPython import embed; embed()
