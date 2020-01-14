@@ -471,6 +471,7 @@ class RepPointsHead(nn.Module):
                             bbox_shift[i_img].permute(1, 2, 0).reshape(-1, 4))
             bbox_list.append(bbox)
 
+        #Refine stage sampling = None
         #from IPython import embed; embed();
         cls_reg_targets_refine = point_target(
             bbox_list,
