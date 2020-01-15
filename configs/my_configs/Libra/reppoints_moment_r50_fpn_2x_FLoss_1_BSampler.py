@@ -48,7 +48,7 @@ train_cfg = dict(
             type='CombinedSampler',
             num=512,
             pos_fraction=0.25,
-            add_gt_as_proposals=True,
+            add_gt_as_proposals=False,
             pos_sampler=dict(type='InstanceBalancedPosSampler'),
             neg_sampler=dict(
                 type='IoUBalancedNegSampler',

@@ -74,7 +74,7 @@ class RepPointsHead(nn.Module):
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
         self.use_sigmoid_cls = loss_cls.get('use_sigmoid', False)
-        self.sampling = loss_cls['type'] not in ['FocalLoss']
+        self.sampling = True #loss_cls['type'] not in ['FocalLoss']
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox_init = build_loss(loss_bbox_init)
         self.loss_bbox_refine = build_loss(loss_bbox_refine)
