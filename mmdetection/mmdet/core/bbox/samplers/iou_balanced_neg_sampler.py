@@ -79,7 +79,8 @@ class IoUBalancedNegSampler(RandomSampler):
         if len(neg_inds) <= num_expected:
             return neg_inds
         else:
-            max_overlaps = assign_result.max_overlaps.cpu().numpy()
+            # Try detaching the max_overlaps. Clarification required
+            max_overlaps = assign_result.max_overlaps.cpu().detach().numpy()
             # balance sampling for negative samples
             neg_set = set(neg_inds.cpu().numpy())
 
