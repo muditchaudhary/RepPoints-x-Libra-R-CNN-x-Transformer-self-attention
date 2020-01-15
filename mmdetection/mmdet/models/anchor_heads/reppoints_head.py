@@ -428,15 +428,12 @@ class RepPointsHead(nn.Module):
             # Assign target for center list
             candidate_list = center_list
         else:
-
             # transform center list to bbox list and
             #   assign target for bbox list
             bbox_list = self.centers_to_bboxes(center_list)
             candidate_list = bbox_list
 
-        # Seems like there is a difference in dimensions because instead of using pseudo bboxes, it is using center_list
 
-        #from IPython import embed; embed();
         cls_reg_targets_init = point_target(
             candidate_list,
             valid_flag_list,
