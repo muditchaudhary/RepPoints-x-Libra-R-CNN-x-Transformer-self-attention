@@ -74,7 +74,7 @@ class RepPointsHead(nn.Module):
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
         self.use_sigmoid_cls = loss_cls.get('use_sigmoid', False)
-        self.sampling = True #loss_cls['type'] not in ['FocalLoss']
+        self.sampling = loss_cls['type'] not in ['FocalLoss']
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox_init = build_loss(loss_bbox_init)
         self.loss_bbox_refine = build_loss(loss_bbox_refine)
@@ -481,7 +481,7 @@ class RepPointsHead(nn.Module):
             gt_bboxes_ignore_list=gt_bboxes_ignore,
             gt_labels_list=gt_labels,
             label_channels=label_channels,
-            sampling=None)
+            sampling=True)
         (labels_list, label_weights_list, bbox_gt_list_refine,
          candidate_list_refine, bbox_weights_list_refine, num_total_pos_refine,
          num_total_neg_refine) = cls_reg_targets_refine

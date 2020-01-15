@@ -44,17 +44,6 @@ model = dict(
 train_cfg = dict(
     init=dict(
         assigner=dict(type='PointAssigner', scale=4, pos_num=1),
-        sampler=dict(
-            type='CombinedSampler',
-            num=512,
-            pos_fraction=0.25,
-            add_gt_as_proposals=False,
-            pos_sampler=dict(type='InstanceBalancedPosSampler'),
-            neg_sampler=dict(
-                type='IoUBalancedNegSampler',
-                floor_thr=-1,
-                floor_fraction=0,
-                num_bins=3)),
         allowed_border=-1,
         pos_weight=-1,
         debug=False),
@@ -65,6 +54,17 @@ train_cfg = dict(
             neg_iou_thr=0.4,
             min_pos_iou=0,
             ignore_iof_thr=-1),
+        sampler=dict(
+                    type='CombinedSampler',
+                    num=512,
+                    pos_fraction=0.25,
+                    add_gt_as_proposals=False,
+                    pos_sampler=dict(type='InstanceBalancedPosSampler'),
+                    neg_sampler=dict(
+                        type='IoUBalancedNegSampler',
+                        floor_thr=-1,
+                        floor_fraction=0,
+                        num_bins=3)),
         allowed_border=-1,
         pos_weight=-1,
         debug=False))
