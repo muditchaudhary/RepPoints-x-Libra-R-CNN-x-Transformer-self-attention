@@ -60,7 +60,9 @@ class RepPointsHead(nn.Module):
                  use_grid_points=False,
                  center_init=True,
                  transform_method='moment',
-                 moment_mul=0.01):
+                 moment_mul=0.01,
+                 sampling_init=False,
+                 sampling_refine=False):
         super(RepPointsHead, self).__init__()
         self.in_channels = in_channels
         self.num_classes = num_classes
@@ -75,6 +77,8 @@ class RepPointsHead(nn.Module):
         self.norm_cfg = norm_cfg
         self.use_sigmoid_cls = loss_cls.get('use_sigmoid', False)
         self.sampling = loss_cls['type'] not in ['FocalLoss']
+        self.sampling_init = sampling_init
+        self.sampling_refine = sampling_refine
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox_init = build_loss(loss_bbox_init)
         self.loss_bbox_refine = build_loss(loss_bbox_refine)
@@ -173,9 +177,9 @@ class RepPointsHead(nn.Module):
         """
         pts_reshape = pts.view(pts.shape[0], -1, 2, *pts.shape[2:])
         pts_y = pts_reshape[:, :, 0, ...] if y_first else pts_reshape[:, :, 1,
-                                                                      ...]
+                                                          ...]
         pts_x = pts_reshape[:, :, 1, ...] if y_first else pts_reshape[:, :, 0,
-                                                                      ...]
+                                                          ...]
         if self.transform_method == 'minmax':
             bbox_left = pts_x.min(dim=1, keepdim=True)[0]
             bbox_right = pts_x.max(dim=1, keepdim=True)[0]
@@ -198,7 +202,7 @@ class RepPointsHead(nn.Module):
             pts_y_std = torch.std(pts_y - pts_y_mean, dim=1, keepdim=True)
             pts_x_std = torch.std(pts_x - pts_x_mean, dim=1, keepdim=True)
             moment_transfer = (self.moment_transfer * self.moment_mul) + (
-                self.moment_transfer.detach() * (1 - self.moment_mul))
+                    self.moment_transfer.detach() * (1 - self.moment_mul))
             moment_width_transfer = moment_transfer[0]
             moment_height_transfer = moment_transfer[1]
             half_width = pts_x_std * torch.exp(moment_width_transfer)
@@ -207,7 +211,7 @@ class RepPointsHead(nn.Module):
                 pts_x_mean - half_width, pts_y_mean - half_height,
                 pts_x_mean + half_width, pts_y_mean + half_height
             ],
-                             dim=1)
+                dim=1)
         else:
             raise NotImplementedError
         return bbox
@@ -423,7 +427,7 @@ class RepPointsHead(nn.Module):
                                                        img_metas)
         pts_coordinate_preds_init = self.offset_to_pts(center_list,
                                                        pts_preds_init)
-        
+
         if cfg.init.assigner['type'] == 'PointAssigner':
             # Assign target for center list
             candidate_list = center_list
@@ -436,7 +440,7 @@ class RepPointsHead(nn.Module):
 
         # Seems like there is a difference in dimensions because instead of using pseudo bboxes, it is using center_list
 
-        #from IPython import embed; embed();
+        # from IPython import embed; embed();
         cls_reg_targets_init = point_target(
             candidate_list,
             valid_flag_list,
@@ -446,12 +450,12 @@ class RepPointsHead(nn.Module):
             gt_bboxes_ignore_list=gt_bboxes_ignore,
             gt_labels_list=gt_labels,
             label_channels=label_channels,
-            sampling=self.sampling)
+            sampling=self.sampling_init)
         (*_, bbox_gt_list_init, candidate_list_init, bbox_weights_list_init,
          num_total_pos_init, num_total_neg_init) = cls_reg_targets_init
         num_total_samples_init = (
             num_total_pos_init +
-            num_total_neg_init if self.sampling else num_total_pos_init)
+            num_total_neg_init if self.sampling_init else num_total_pos_init)
 
         # target for refinement stage
         center_list, valid_flag_list = self.get_points(featmap_sizes,
@@ -471,7 +475,7 @@ class RepPointsHead(nn.Module):
                             bbox_shift[i_img].permute(1, 2, 0).reshape(-1, 4))
             bbox_list.append(bbox)
 
-        #from IPython import embed; embed();
+        # from IPython import embed; embed();
         cls_reg_targets_refine = point_target(
             bbox_list,
             valid_flag_list,
@@ -481,13 +485,13 @@ class RepPointsHead(nn.Module):
             gt_bboxes_ignore_list=gt_bboxes_ignore,
             gt_labels_list=gt_labels,
             label_channels=label_channels,
-            sampling=True)
+            sampling=self.sampling_refine)
         (labels_list, label_weights_list, bbox_gt_list_refine,
          candidate_list_refine, bbox_weights_list_refine, num_total_pos_refine,
          num_total_neg_refine) = cls_reg_targets_refine
         num_total_samples_refine = (
             num_total_pos_refine +
-            num_total_neg_refine if self.sampling else num_total_pos_refine)
+            num_total_neg_refine if self.sampling_refine else num_total_pos_refine)
 
         # compute loss
         losses_cls, losses_pts_init, losses_pts_refine = multi_apply(
