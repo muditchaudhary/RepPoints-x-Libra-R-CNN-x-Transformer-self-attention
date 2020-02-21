@@ -39,21 +39,12 @@ model = dict(
             loss_weight=1.0),
         loss_bbox_init=dict(type='SmoothL1Loss', beta=0.11, loss_weight=0.5),
         loss_bbox_refine=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
-        transform_method='moment'))
+        transform_method='moment',
+        sampling_init=True))
 # training and testing settings
 train_cfg = dict(
     init=dict(
         assigner=dict(type='PointAssigner', scale=4, pos_num=1),
-        allowed_border=-1,
-        pos_weight=-1,
-        debug=False),
-    refine=dict(
-        assigner=dict(
-            type='MaxIoUAssigner',
-            pos_iou_thr=0.5,
-            neg_iou_thr=0.4,
-            min_pos_iou=0,
-            ignore_iof_thr=-1),
         sampler=dict(
                     type='CombinedSampler',
                     num=512,
@@ -64,7 +55,17 @@ train_cfg = dict(
                         type='IoUBalancedNegSampler',
                         floor_thr=-1,
                         floor_fraction=0,
-                        num_bins=3)),
+                        num_bins=3),
+        allowed_border=-1,
+        pos_weight=-1,
+        debug=False),
+    refine=dict(
+        assigner=dict(
+            type='MaxIoUAssigner',
+            pos_iou_thr=0.5,
+            neg_iou_thr=0.4,
+            min_pos_iou=0,
+            ignore_iof_thr=-1)),
         allowed_border=-1,
         pos_weight=-1,
         debug=False))
