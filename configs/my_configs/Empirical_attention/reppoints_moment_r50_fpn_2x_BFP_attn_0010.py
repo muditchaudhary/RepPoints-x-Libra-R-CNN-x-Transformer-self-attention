@@ -143,5 +143,5 @@ log_level = 'INFO'
 work_dir = './work_dirs/reppoints_moment_r50_fpn_2x_BFP'
 load_from = None
 resume_from = None  # './work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu/latest.pth'
-auto_resume = True
+auto_resume = False
 workflow = [('train', 1)]
