@@ -10,15 +10,26 @@ model = dict(
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
-        style='pytorch'),
-    neck=dict(
-        type='FPN',
-        in_channels=[256, 512, 1024, 2048],
-        out_channels=256,
-        start_level=1,
-        add_extra_convs=True,
-        num_outs=5,
-        norm_cfg=norm_cfg),
+        style='pytorch',
+        gen_attention=dict(spatial_range=-1, num_heads=8, attention_type='0010', kv_stride=2),
+        stage_with_gen_attention=[[], [], [0, 1, 2, 3, 4, 5], [0, 1, 2]],
+    ),
+    neck=[
+        dict(
+            type='FPN',
+            in_channels=[256, 512, 1024, 2048],
+            out_channels=256,
+            start_level=1,
+            add_extra_convs=True,
+            num_outs=5,
+            norm_cfg=norm_cfg),
+        dict(
+            type='BFP',
+            in_channels=256,
+            num_levels=5,
+            refine_level=2,
+            refine_type='non_local')
+    ],
     bbox_head=dict(
         type='RepPointsHead',
         num_classes=81,
@@ -27,7 +38,7 @@ model = dict(
         point_feat_channels=256,
         stacked_convs=3,
         num_points=9,
-        gradient_mul=1, #To not detach any gradient calculations during backprop
+        gradient_mul=0.1,
         point_strides=[8, 16, 32, 64, 128],
         point_base_scale=4,
         norm_cfg=norm_cfg,
@@ -54,17 +65,6 @@ train_cfg = dict(
             neg_iou_thr=0.4,
             min_pos_iou=0,
             ignore_iof_thr=-1),
-        sampler=dict(
-                    type='CombinedSampler',
-                    num=512,
-                    pos_fraction=0.25,
-                    add_gt_as_proposals=False,
-                    pos_sampler=dict(type='InstanceBalancedPosSampler'),
-                    neg_sampler=dict(
-                        type='IoUBalancedNegSampler',
-                        floor_thr=-1,
-                        floor_fraction=0,
-                        num_bins=3)),
         allowed_border=-1,
         pos_weight=-1,
         debug=False))
@@ -140,8 +140,8 @@ total_epochs = 12
 device_ids = range(5)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/reppoints_moment_r50_fpn_2x'
+work_dir = './work_dirs/reppoints_moment_r50_fpn_2x_BFP'
 load_from = None
-resume_from = None #'./work_dirs/reppoints_moment_r50_fpn_2x_FLoss_1_BSampler_fix/latest.pth'
+resume_from = None  # './work_dirs/reppoints_moment_r50_fpn_2x_train_4gpu/latest.pth'
 auto_resume = True
 workflow = [('train', 1)]
