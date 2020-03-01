@@ -6,8 +6,8 @@ set -x
 
 PARTITION=gpu_2h
 JOB_NAME=reppoints_test
-CONFIG=./configs/my_configs/Libra/reppoints_moment_r50_fpn_2x_FLoss_1_BSampler.py
-CHECKPOINT=./work_dirs/reppoints_moment_r50_fpn_2x_FLoss_1_BSampler/latest.pth
+CONFIG=./configs/my_configs/Libra/reppoints_moment_r50_fpn_2x_FLoss_1_initBSampler.py
+CHECKPOINT=./work_dirs/reppoints_moment_r50_fpn_2x_FLoss_1_BSampler_fix/latest.pth
 GPUS=${5:-4}
 GPUS_PER_NODE=${GPUS_PER_NODE:-4}
 CPUS_PER_TASK=${CPUS_PER_TASK:-5}
@@ -22,5 +22,5 @@ srun -p ${PARTITION} \
     --cpus-per-task=${CPUS_PER_TASK} \
     --kill-on-bad-exit=1 \
     ${SRUN_ARGS} \
-    python -u ./mmdetection/tools/test.py ${CONFIG} ${CHECKPOINT} --launcher="slurm" --out "./work_dirs/reppoints_moment_r50_fpn_2x_FLoss_1_BSampler/results.pkl" --eval "bbox"
+    python -u ./mmdetection/tools/test.py ${CONFIG} ${CHECKPOINT} --launcher="slurm" --out "./work_dirs/reppoints_moment_r50_fpn_2x_FLoss_1_BSampler_fix/results.pkl" --eval "bbox"
     #${PY_ARGS}
