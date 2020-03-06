@@ -5,6 +5,8 @@ from mmcv.cnn import xavier_init
 from ..plugins import NonLocal2D
 from ..registry import NECKS
 from ..utils import ConvModule
+from mmdet.models.plugins import GeneralizedAttention
+
 
 
 @NECKS.register_module
@@ -34,9 +36,11 @@ class BFP(nn.Module):
                  refine_level=2,
                  refine_type=None,
                  conv_cfg=None,
-                 norm_cfg=None):
+                 norm_cfg=None,
+                 gen_attention=None):
         super(BFP, self).__init__()
-        assert refine_type in [None, 'conv', 'non_local']
+        assert refine_type in [None, 'conv', 'non_local','transformer']
+        assert gen_attention is None or isinstance(gen_attention,dict)
 
         self.in_channels = in_channels
         self.num_levels = num_levels
@@ -62,6 +66,8 @@ class BFP(nn.Module):
                 use_scale=False,
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg)
+        elif self.refine_type == 'transformer':
+            self.refine= GeneralizedAttention(self.in_channels,**gen_attention)
 
     def init_weights(self):
         for m in self.modules():
