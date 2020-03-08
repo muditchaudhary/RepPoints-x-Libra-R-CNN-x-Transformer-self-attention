@@ -27,7 +27,7 @@ class BFP(nn.Module):
         refine_level (int): Index of integration and refine level of BSF in
             multi-level features from bottom to top.
         refine_type (str): Type of the refine op, currently support
-            [None, 'conv', 'non_local'].
+            [None, 'conv', 'non_local','transformer'].
     """
 
     def __init__(self,
@@ -76,7 +76,6 @@ class BFP(nn.Module):
 
     def forward(self, inputs):
         assert len(inputs) == self.num_levels
-
         # step 1: gather multi-level features by resize and average
         feats = []
         gather_size = inputs[self.refine_level].size()[2:]
