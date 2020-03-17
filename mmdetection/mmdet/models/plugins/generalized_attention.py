@@ -370,6 +370,9 @@ class GeneralizedAttention(nn.Module):
 
         out = self.proj_conv(out)
         out = self.gamma * out + x_input
+
+        from IPython import embed; embed()
+
         return out
 
     def init_weights(self):
