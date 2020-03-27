@@ -219,6 +219,7 @@ class Bottleneck(nn.Module):
 
     def forward(self, x):
 
+
         def _inner_forward(x):
             identity = x
 
@@ -253,9 +254,7 @@ class Bottleneck(nn.Module):
 
             out += identity
 
-            print("ResNet | test out")
-            from IPython import embed;
-            embed()
+
             return out
 
         if self.with_cp and x.requires_grad:
@@ -506,6 +505,9 @@ class ResNet(nn.Module):
             raise TypeError('pretrained must be a str or None')
 
     def forward(self, x):
+        print("ResNet | test x")
+        from IPython import embed;
+        embed()
         x = self.conv1(x)
         x = self.norm1(x)
         x = self.relu(x)
