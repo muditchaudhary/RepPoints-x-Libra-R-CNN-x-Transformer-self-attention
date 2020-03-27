@@ -160,7 +160,7 @@ class GeneralizedAttention(nn.Module):
                                device,
                                feat_dim,
                                wave_length=1000):
-        h_idxs = torch.linspace(0, h - 1, h).cuda(device)
+        h_idxs = torch.linspace(0, h - 1, h).cuda(device) #
         from IPython import embed;
         embed()
         h_idxs = h_idxs.view((h, 1)) * q_stride
@@ -208,7 +208,7 @@ class GeneralizedAttention(nn.Module):
         num_heads = self.num_heads
         #x_input.size torch.Size([2, 256, 50, 76])
         # use empirical_attention
-        print("Generalized attention | check x_input")
+        #print("Generalized attention | check x_input")
         #from IPython import embed; embed()
         if self.q_downsample is not None:
             x_q = self.q_downsample(x_input)
