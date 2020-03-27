@@ -11,7 +11,7 @@ model = dict(
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         style='pytorch',
-        gen_attention=dict(spatial_range=-1, num_heads=8, attention_type='0010', kv_stride=2),
+        gen_attention=dict(spatial_range=-1, num_heads=8, attention_type='0110', kv_stride=2),
         stage_with_gen_attention=[[], [], [0, 1, 2, 3, 4, 5], [0, 1, 2]],
     ),
     neck=[
