@@ -161,19 +161,25 @@ class GeneralizedAttention(nn.Module):
                                feat_dim,
                                wave_length=1000):
         h_idxs = torch.linspace(0, h - 1, h).cuda(device)
+        from IPython import embed;
+        embed()
         h_idxs = h_idxs.view((h, 1)) * q_stride
-
+        embed()
         w_idxs = torch.linspace(0, w - 1, w).cuda(device)
+        embed()
         w_idxs = w_idxs.view((w, 1)) * q_stride
-
+        embed()
         h_kv_idxs = torch.linspace(0, h_kv - 1, h_kv).cuda(device)
+        embed()
         h_kv_idxs = h_kv_idxs.view((h_kv, 1)) * kv_stride
+        embed()
 
         w_kv_idxs = torch.linspace(0, w_kv - 1, w_kv).cuda(device)
         w_kv_idxs = w_kv_idxs.view((w_kv, 1)) * kv_stride
 
         # (h, h_kv, 1)
         h_diff = h_idxs.unsqueeze(1) - h_kv_idxs.unsqueeze(0)
+        embed()
         h_diff *= self.position_magnitude
 
         # (w, w_kv, 1)
@@ -183,8 +189,11 @@ class GeneralizedAttention(nn.Module):
         feat_range = torch.arange(0, feat_dim / 4).cuda(device)
 
         dim_mat = torch.Tensor([wave_length]).cuda(device)
+        embed()
         dim_mat = dim_mat**((4. / feat_dim) * feat_range)
+        embed()
         dim_mat = dim_mat.view((1, 1, -1))
+        embed()
 
         embedding_x = torch.cat(
             ((w_diff / dim_mat).sin(), (w_diff / dim_mat).cos()), dim=2)
@@ -192,6 +201,7 @@ class GeneralizedAttention(nn.Module):
         embedding_y = torch.cat(
             ((h_diff / dim_mat).sin(), (h_diff / dim_mat).cos()), dim=2)
 
+        embed()
         return embedding_x, embedding_y
 
     def forward(self, x_input):
@@ -199,7 +209,7 @@ class GeneralizedAttention(nn.Module):
         #x_input.size torch.Size([2, 256, 50, 76])
         # use empirical_attention
         print("Generalized attention | check x_input")
-        from IPython import embed; embed()
+        #from IPython import embed; embed()
         if self.q_downsample is not None:
             x_q = self.q_downsample(x_input)
         else:

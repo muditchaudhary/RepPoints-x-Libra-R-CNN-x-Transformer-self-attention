@@ -506,8 +506,8 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         print("ResNet | test x")
-        from IPython import embed;
-        embed()
+        #from IPython import embed;
+        #embed()
         x = self.conv1(x)
         x = self.norm1(x)
         x = self.relu(x)
