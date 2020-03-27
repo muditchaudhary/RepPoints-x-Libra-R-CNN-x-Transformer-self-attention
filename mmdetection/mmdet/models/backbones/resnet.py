@@ -240,6 +240,8 @@ class Bottleneck(nn.Module):
             out = self.relu(out)
 
             if self.with_gen_attention:
+                print("ResNet | test out")
+                from IPython import embed; embed()
                 out = self.gen_attention_block(out)
 
             out = self.conv3(out)
