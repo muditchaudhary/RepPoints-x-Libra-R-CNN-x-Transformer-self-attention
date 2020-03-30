@@ -65,7 +65,7 @@ class GeneralizedAttention(nn.Module):
                 bias=False)
             self.query_conv.kaiming_init = True
 
-        if self.attention_type[0] or self.attention_type[2]:
+        if self.attention_type[0] or self.attention_type[2]:        #Need
             self.key_conv = nn.Conv2d(
                 in_channels=in_dim,
                 out_channels=out_c,
@@ -90,7 +90,7 @@ class GeneralizedAttention(nn.Module):
                 self.position_embedding_dim // 2, out_c, bias=False)
             self.appr_geom_fc_y.kaiming_init = True
 
-        if self.attention_type[2]:
+        if self.attention_type[2]:                                 #Need
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
             appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv
             self.appr_bias = nn.Parameter(appr_bias_value)
@@ -228,7 +228,7 @@ class GeneralizedAttention(nn.Module):
                 (n, num_heads, self.qk_embed_dim, h * w))
             proj_query = proj_query.permute(0, 1, 3, 2)
 
-        if self.attention_type[0] or self.attention_type[2]:
+        if self.attention_type[0] or self.attention_type[2]:        #Need
             proj_key = self.key_conv(x_kv).view(
                 (n, num_heads, self.qk_embed_dim, h_kv * w_kv)) #proj key size torch.Size([2, 8, 32, 950])
 
@@ -280,7 +280,7 @@ class GeneralizedAttention(nn.Module):
             # attention_type[1]: appr - position
             # attention_type[2]: bias - appr
             # attention_type[3]: bias - position
-            if self.attention_type[0] or self.attention_type[2]:
+            if self.attention_type[0] or self.attention_type[2]:                #Need
                 if self.attention_type[0] and self.attention_type[2]:
                     appr_bias = self.appr_bias.\
                         view(1, num_heads, 1, self.qk_embed_dim)    #appr_bias size torch.Size([2, 8, 1, 32])
@@ -291,7 +291,7 @@ class GeneralizedAttention(nn.Module):
                     energy = torch.matmul(proj_query, proj_key).\
                         view(n, num_heads, h, w, h_kv, w_kv)
 
-                elif self.attention_type[2]:
+                elif self.attention_type[2]:                                    #Need
                     appr_bias = self.appr_bias.\
                         view(1, num_heads, 1, self.qk_embed_dim).\
                         repeat(n, 1, 1, 1)
