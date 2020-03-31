@@ -309,14 +309,14 @@ class GeneralizedAttention(nn.Module):
                 elif self.attention_type[1]:
                     proj_query_reshape = proj_query.\
                         view(n, num_heads, h, w, self.qk_embed_dim)
-                    proj_query_reshape = proj_query_reshape.\
+                    proj_query_reshape_x = proj_query_reshape.\
                         permute(0, 1, 3, 2, 4)
                     position_feat_x_reshape = position_feat_x.\
                         permute(0, 1, 2, 4, 3)
                     position_feat_y_reshape = position_feat_y.\
                         permute(0, 1, 2, 4, 3)
 
-                    energy_x = torch.matmul(proj_query_reshape,
+                    energy_x = torch.matmul(proj_query_reshape_x,
                                             position_feat_x_reshape)
                     energy_x = energy_x.permute(0, 1, 3, 2, 4).unsqueeze(4)
 
