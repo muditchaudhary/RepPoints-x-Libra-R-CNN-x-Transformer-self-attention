@@ -162,25 +162,17 @@ class GeneralizedAttention(nn.Module):
                                wave_length=1000):
         # h=50 w=76
         h_idxs = torch.linspace(0, h - 1, h).cuda(device) # torch.Size([50])
-        from IPython import embed;
-        embed()
         h_idxs = h_idxs.view((h, 1)) * q_stride #q_stride = 1
-        embed()
         w_idxs = torch.linspace(0, w - 1, w).cuda(device)
-        embed()
         w_idxs = w_idxs.view((w, 1)) * q_stride
-        embed()
         h_kv_idxs = torch.linspace(0, h_kv - 1, h_kv).cuda(device) #h_kv = 25 torch.Size([50])
-        embed()
         h_kv_idxs = h_kv_idxs.view((h_kv, 1)) * kv_stride #kv_stride = 2
-        embed()
 
         w_kv_idxs = torch.linspace(0, w_kv - 1, w_kv).cuda(device)
         w_kv_idxs = w_kv_idxs.view((w_kv, 1)) * kv_stride
 
         # (h, h_kv, 1)
         h_diff = h_idxs.unsqueeze(1) - h_kv_idxs.unsqueeze(0) # torch.Size([50, 25, 1])
-        embed()
         h_diff *= self.position_magnitude
 
         # (w, w_kv, 1)
@@ -190,11 +182,8 @@ class GeneralizedAttention(nn.Module):
         feat_range = torch.arange(0, feat_dim / 4).cuda(device) #feat_dim=256
 
         dim_mat = torch.Tensor([wave_length]).cuda(device) #tensor([1000.], device='cuda:0')
-        embed()
         dim_mat = dim_mat**((4. / feat_dim) * feat_range)
-        embed()
         dim_mat = dim_mat.view((1, 1, -1))
-        embed()
 
         embedding_x = torch.cat(
             ((w_diff / dim_mat).sin(), (w_diff / dim_mat).cos()), dim=2) # torch.Size([76, 38, 128])
@@ -202,6 +191,8 @@ class GeneralizedAttention(nn.Module):
         embedding_y = torch.cat(
             ((h_diff / dim_mat).sin(), (h_diff / dim_mat).cos()), dim=2) # torch.Size([50, 25, 128])
 
+        from IPython import embed
+        print("Finish Position Embedding")
         embed()
         return embedding_x, embedding_y
 
@@ -337,7 +328,9 @@ class GeneralizedAttention(nn.Module):
                     energy_y = torch.matmul(proj_query_reshape,
                                             position_feat_y_reshape)
                     energy_y = energy_y.unsqueeze(5)
-
+                    from IPython import embed
+                    embed()
+                    print("Calculated energy")
                     energy += energy_x + energy_y
 
                 elif self.attention_type[3]:
