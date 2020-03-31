@@ -308,6 +308,9 @@ class GeneralizedAttention(nn.Module):
                         position_feat_y.permute(0, 1, 2, 4, 3))
                     energy_y = energy_y.unsqueeze(5)
 
+                    from IPython import embed;
+                    embed()
+
                     energy += energy_x + energy_y
 
                 elif self.attention_type[1]:
