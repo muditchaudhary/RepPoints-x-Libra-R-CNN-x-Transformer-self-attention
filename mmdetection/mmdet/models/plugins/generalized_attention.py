@@ -325,12 +325,14 @@ class GeneralizedAttention(nn.Module):
                                             position_feat_x_reshape)
                     energy_x = energy_x.permute(0, 1, 3, 2, 4).unsqueeze(4)
 
+                    print("Test energy_x position_y_reshape, proj_query_reshape")
+                    from IPython import embed
+                    embed()
+
                     energy_y = torch.matmul(proj_query_reshape,
                                             position_feat_y_reshape)
                     energy_y = energy_y.unsqueeze(5)
-                    from IPython import embed
-                    embed()
-                    print("Calculated energy")
+
                     energy += energy_x + energy_y
 
                 elif self.attention_type[3]:
