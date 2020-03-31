@@ -333,4 +333,4 @@ data/
 data2/
 *.pth
 work_dirs/
-
+*.json
