@@ -103,14 +103,14 @@ class GeneralizedAttention(nn.Module):
             appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv
             self.appr_bias = nn.Parameter(appr_bias_value)
 
-        from IPython import embed(); embed()
+        from IPython import embed; embed()
 
         if self.attention_type[3]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
             geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv
             self.geom_bias = nn.Parameter(geom_bias_value)
         
-        from IPython import embed(); embed()
+        from IPython import embed; embed()
 
         self.proj_conv = nn.Conv2d(
             in_channels=self.v_dim * num_heads,
