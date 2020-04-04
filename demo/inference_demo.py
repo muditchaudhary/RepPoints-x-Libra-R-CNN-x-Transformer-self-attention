@@ -10,6 +10,7 @@ outfile_path = './BLoss_FLoss0' +'/'
 
 model = init_detector(config_file,checkpoint_file)
 
+from IPython import embed; embed()
 for i in range(1,10):
     test_img = './test_'+str(i)+'.jpg'
     result = inference_detector(model,test_img)
