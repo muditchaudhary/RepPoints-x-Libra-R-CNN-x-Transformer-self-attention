@@ -11,7 +11,7 @@ from mmdet.apis import (get_root_logger, init_dist, set_random_seed,
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 
-
+# Function to parse agruments from the training command
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('config', help='train config file path')
@@ -49,6 +49,7 @@ def parse_args():
 def main():
     args = parse_args()
 
+    # Load configuration file
     cfg = Config.fromfile(args.config)
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):

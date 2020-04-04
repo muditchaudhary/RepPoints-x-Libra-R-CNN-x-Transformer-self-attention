@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from mmcv.cnn import kaiming_init
 
 
+# Extends nn.Module class
 class GeneralizedAttention(nn.Module):
     """GeneralizedAttention module.
 
@@ -17,12 +18,12 @@ class GeneralizedAttention(nn.Module):
         in_dim (int): Channels of the input feature map.
         spatial_range (int): The spatial range.
             -1 indicates no spatial range constraint.
-        num_heads (int): The head number of empirical_attention module.
-        position_embedding_dim (int): The position embedding dimension.
+        num_heads (int): The head number of empirical_attention module. --> M
+        position_embedding_dim (int): The position embedding dimension. --> Axes of the tensor
         position_magnitude (int): A multiplier acting on coord difference.
-        kv_stride (int): The feature stride acting on key/value feature map.
-        q_stride (int): The feature stride acting on query feature map.
-        attention_type (str): A binary indicator string for indicating which
+        kv_stride (int): The feature stride acting on key/value feature map. --> stride applied for key/value filer
+        q_stride (int): The feature stride acting on query feature map. --> stride applie for query filter
+        attention_type (str): A binary indicator string for indicating which --> factors of transformer attention
             items in generalized empirical_attention module are used.
             '1000' indicates 'query and key content' (appr - appr) item,
             '0100' indicates 'query content and relative position'
@@ -44,36 +45,41 @@ class GeneralizedAttention(nn.Module):
         super(GeneralizedAttention, self).__init__()
 
         # hard range means local range for non-local operation
+
+        # Use positional embedding dimesion if available otherwise the input feautre channel
         self.position_embedding_dim = (
             position_embedding_dim if position_embedding_dim > 0 else in_dim)
-
+ 
         self.position_magnitude = position_magnitude
-        self.num_heads = num_heads
-        self.channel_in = in_dim
-        self.spatial_range = spatial_range
-        self.kv_stride = kv_stride
+        self.num_heads = num_heads # total number of attention heads
+        self.channel_in = in_dim # input channels 
+        self.spatial_range = spatial_range # neighborhood
+        self.kv_stride = kv_stride 
         self.q_stride = q_stride
         self.attention_type = [bool(int(_)) for _ in attention_type]
         self.qk_embed_dim = in_dim // num_heads
-        out_c = self.qk_embed_dim * num_heads
+        out_c = self.qk_embed_dim * num_heads # No of embedded dimensions in integers
 
+        # If 1000 or 0100 --> query and key content and query content and relative position
         if self.attention_type[0] or self.attention_type[1]:
-            self.query_conv = nn.Conv2d(
-                in_channels=in_dim,
-                out_channels=out_c,
+            self.query_conv = nn.Conv2d( # hidden create a convolution layer for query 
+                in_channels=in_dim, # input channel featuree map
+                out_channels=out_c, # output channel feature map
                 kernel_size=1,
                 bias=False)
             self.query_conv.kaiming_init = True
 
+        # Query and key content and ket content only
         if self.attention_type[0] or self.attention_type[2]:
-            self.key_conv = nn.Conv2d(
-                in_channels=in_dim,
-                out_channels=out_c,
+            self.key_conv = nn.Conv2d( # hidden convolution layer for key
+                in_channels=in_dim, # input channel featuree map
+                out_channels=out_c, # output channel feature map
                 kernel_size=1,
                 bias=False)
             self.key_conv.kaiming_init = True
 
         self.v_dim = in_dim // num_heads
+        # Hidden convolution layer
         self.value_conv = nn.Conv2d(
             in_channels=in_dim,
             out_channels=self.v_dim * num_heads,
@@ -81,6 +87,7 @@ class GeneralizedAttention(nn.Module):
             bias=False)
         self.value_conv.kaiming_init = True
 
+        # When query and relative position or relative position only
         if self.attention_type[1] or self.attention_type[3]:
             self.appr_geom_fc_x = nn.Linear(
                 self.position_embedding_dim // 2, out_c, bias=False)
@@ -90,15 +97,20 @@ class GeneralizedAttention(nn.Module):
                 self.position_embedding_dim // 2, out_c, bias=False)
             self.appr_geom_fc_y.kaiming_init = True
 
+        # When key content only
         if self.attention_type[2]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
             appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv
             self.appr_bias = nn.Parameter(appr_bias_value)
 
+        from IPython import embed(); embed()
+
         if self.attention_type[3]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
             geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv
             self.geom_bias = nn.Parameter(geom_bias_value)
+        
+        from IPython import embed(); embed()
 
         self.proj_conv = nn.Conv2d(
             in_channels=self.v_dim * num_heads,
