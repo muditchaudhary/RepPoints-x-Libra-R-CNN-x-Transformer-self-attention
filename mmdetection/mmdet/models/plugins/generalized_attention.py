@@ -100,17 +100,13 @@ class GeneralizedAttention(nn.Module):
         # When key content only
         if self.attention_type[2]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
-            appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv
+            appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv # rank 1 bias tensor of out_c scalars
             self.appr_bias = nn.Parameter(appr_bias_value)
-
-        from IPython import embed(); embed()
 
         if self.attention_type[3]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
-            geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv
-            self.geom_bias = nn.Parameter(geom_bias_value)
-        
-        from IPython import embed(); embed()
+            geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv # rank 1 bias tensor of out_c scalars
+            self.geom_bias = nn.Parameter(geom_bias_value) # adds the tensor to parameters list
 
         self.proj_conv = nn.Conv2d(
             in_channels=self.v_dim * num_heads,
@@ -128,8 +124,13 @@ class GeneralizedAttention(nn.Module):
                 max_len = 42
 
             max_len_kv = int((max_len - 1.0) / self.kv_stride + 1)
-            local_constraint_map = np.ones(
-                (max_len, max_len, max_len_kv, max_len_kv), dtype=np.int)
+            # dimen1 --> max_len
+            # dime2 --> max_len
+            # dimen3 --> max_len
+            # dimen4 --> max_len
+            local_constraint_map = np.ones((max_len, max_len, max_len_kv, max_len_kv), dtype=np.int)
+            from IPython import embed; embed()
+
             for iy in range(max_len):
                 for ix in range(max_len):
                     local_constraint_map[iy, ix,
