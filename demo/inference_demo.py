@@ -14,4 +14,5 @@ from IPython import embed; embed()
 for i in range(1,10):
     test_img = './test_'+str(i)+'.jpg'
     result = inference_detector(model,test_img)
+    embed()
     show_result(test_img,result,model.CLASSES,0.5,show=False, out_file=outfile_path+test_img)
