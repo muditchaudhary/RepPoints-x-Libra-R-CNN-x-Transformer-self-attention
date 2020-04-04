@@ -100,8 +100,9 @@ class GeneralizedAttention(nn.Module):
         # When key content only
         if self.attention_type[2]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
-            appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv # rank 1 bias tensor of out_c scalars
+            appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv 
             self.appr_bias = nn.Parameter(appr_bias_value)
+
         if self.attention_type[3]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
             geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv
@@ -109,9 +110,8 @@ class GeneralizedAttention(nn.Module):
        
         if self.attention_type[3]:
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
-            geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv # rank 1 bias tensor of out_c scalars
-            self.geom_bias = nn.Parameter(geom_bias_value) # adds the tensor to parameters list
-
+            geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv
+            self.geom_bias = nn.Parameter(geom_bias_value) 
         self.proj_conv = nn.Conv2d(
             in_channels=self.v_dim * num_heads,
             out_channels=in_dim,
@@ -169,7 +169,7 @@ class GeneralizedAttention(nn.Module):
     def get_position_embedding(self,
                                h,
                                w,
-                               h_kv,
+                               h_kv, # height of feature 
                                w_kv,
                                q_stride,
                                kv_stride,
@@ -177,21 +177,21 @@ class GeneralizedAttention(nn.Module):
                                feat_dim,
                                wave_length=1000):
         # h=50 w=76
-        h_idxs = torch.linspace(0, h - 1, h).cuda(device) # torch.Size([50])
+        h_idxs = torch.linspace(0, h - 1, h).cuda(device) # torch.Size([50]) --> index 
         h_idxs = h_idxs.view((h, 1)) * q_stride #q_stride = 1
         w_idxs = torch.linspace(0, w - 1, w).cuda(device)
         w_idxs = w_idxs.view((w, 1)) * q_stride
         h_kv_idxs = torch.linspace(0, h_kv - 1, h_kv).cuda(device) #h_kv = 25 torch.Size([50])
-        h_kv_idxs = h_kv_idxs.view((h_kv, 1)) * kv_stride #kv_stride = 2
+        h_kv_idxs = h_kv_idxs.view((h_kv, 1)) * kv_stride #kv_stride = 2 --> index for height of key value feature map
 
         w_kv_idxs = torch.linspace(0, w_kv - 1, w_kv).cuda(device)
-        w_kv_idxs = w_kv_idxs.view((w_kv, 1)) * kv_stride
+        w_kv_idxs = w_kv_idxs.view((w_kv, 1)) * kv_stride # tensor for index of width of key valuee feature
 
         # (h, h_kv, 1)
-        h_diff = h_idxs.unsqueeze(1) - h_kv_idxs.unsqueeze(0) # torch.Size([50, 25, 1])
+        h_diff = h_idxs.unsqueeze(1) '''torch.Size([50,1,1])''' - h_kv_idxs.unsqueeze(0) '''torch.Size[1,25,1]''' # torch.Size([50, 25, 1]) --> Broadcasting occurs here
         h_diff *= self.position_magnitude
         # (w, w_kv, 1)
-        w_diff = w_idxs.unsqueeze(1) - w_kv_idxs.unsqueeze(0)
+        w_diff = w_idxs.unsqueeze(1) '''torch.Size[76,1,1]'''- w_kv_idxs.unsqueeze(0) '''torch.Size[1,38,1]''' # torch.Size([76,38,1])
         w_diff *= self.position_magnitude
 
         feat_range = torch.arange(0, feat_dim / 4).cuda(device) #feat_dim=256
@@ -200,7 +200,7 @@ class GeneralizedAttention(nn.Module):
         dim_mat = dim_mat**((4. / feat_dim) * feat_range)
         #print("Embed 1"); embed()
         dim_mat = dim_mat.view((1, 1, -1))
-        
+      
         embedding_x = torch.cat(
             ((w_diff / dim_mat).sin(), (w_diff / dim_mat).cos()), dim=2) # torch.Size([76, 38, 128])
         #print("Embed 2"); embed()
@@ -215,18 +215,24 @@ class GeneralizedAttention(nn.Module):
         # use empirical_attention
         #print("Generalized attention | check x_input")
         #from IPython import embed; embed()
-        if self.q_downsample is not None:
+
+        # Check from __init__
+        # Avg Pooling was applied, downsample it with the input
+
+        # This is for query and its content
+        if self.q_downsample is not None: 
             x_q = self.q_downsample(x_input)
         else:
             x_q = x_input
-        n, _, h, w = x_q.shape
+        n, _, h, w = x_q.shape #unpacking --> n=batch size h=height of image w=width of image
 
         from IPython import embed;
         #print("Embed 1"); embed()
+        # This is for key an its conent
         if self.kv_downsample is not None:
             x_kv = self.kv_downsample(x_input)
         else:
-            x_kv = x_input
+            x_kv = x_q
         _, _, h_kv, w_kv = x_kv.shape
         #print("Embed 2"); embed()
         if self.attention_type[0] or self.attention_type[1]:
@@ -235,7 +241,15 @@ class GeneralizedAttention(nn.Module):
             #print("Embed 1"); embed()
             proj_query = proj_query.permute(0, 1, 3, 2)
             #print("Embed 2"); embed()
+        _, _, h_kv, w_kv = x_kv.shape #unpacking --> n=batch size h=height of image w=width of image
 
+        # Projects attention whereever query content is required
+        if self.attention_type[0] or self.attention_type[1]:
+            proj_query = self.query_conv(x_q).view(
+                (n, num_heads, self.qk_embed_dim, h * w)) # torch.Size([2, 8, 32, 3800])
+            proj_query = proj_query.permute(0, 1, 3, 2) # torch.Size([2, 8, 3800, 32])
+
+        # Projects attention whereever key content is required
         if self.attention_type[0] or self.attention_type[2]:
             proj_key = self.key_conv(x_kv).view(
                 (n, num_heads, self.qk_embed_dim, h_kv * w_kv)) #proj key size torch.Size([2, 8, 32, 950])
@@ -244,20 +258,20 @@ class GeneralizedAttention(nn.Module):
         if self.attention_type[1] or self.attention_type[3]:
             position_embed_x, position_embed_y = self.get_position_embedding(
                 h, w, h_kv, w_kv, self.q_stride, self.kv_stride,
-                x_input.device, self.position_embedding_dim)
+                x_input.device, self.position_embedding_dim) # torch.Size([76,38,128]) and torch.Size([50,25,128])
             # (n, num_heads, w, w_kv, dim)
             #print("Embed 1"); embed()
             position_feat_x = self.appr_geom_fc_x(position_embed_x).\
                 view(1, w, w_kv, num_heads, self.qk_embed_dim).\
                 permute(0, 3, 1, 2, 4).\
-                repeat(n, 1, 1, 1, 1)
-            #print("Embed 2"); embed()
+                repeat(n, 1, 1, 1, 1) # n = 2 Before permute --> torch.Size([1,76,38,8,32]), After permute --> torch.Size([1, 8, 76,38, 32]), Repeat, repeats the whole tensor so that once more n = 2 instead of one
+
             # (n, num_heads, h, h_kv, dim)
             position_feat_y = self.appr_geom_fc_y(position_embed_y).\
                 view(1, h, h_kv, num_heads, self.qk_embed_dim).\
                 permute(0, 3, 1, 2, 4).\
-                repeat(n, 1, 1, 1, 1)
-            #print("Embed 3"); embed()
+                repeat(n, 1, 1, 1, 1) # Similar changes as is position_feat_x
+
             position_feat_x /= math.sqrt(2)
             position_feat_y /= math.sqrt(2)
 
@@ -265,16 +279,28 @@ class GeneralizedAttention(nn.Module):
         if (np.sum(self.attention_type) == 1) and self.attention_type[2]:
             appr_bias = self.appr_bias.\
                 view(1, num_heads, 1, self.qk_embed_dim).\
-                repeat(n, 1, 1, 1)
+                repeat(n, 1, 1, 1) # Final torch.Size([2, 8, 1, 32])
 
+            # E3 
+            # The fourth index of appr_bias should match the third index of proj_key for matric multiplication
+            # This will give torch.Size([2, 8, 1, 950])
+            # Which is viewed as torch.Size([2, 8, 50, 76, 25, 38])
+            # self.appr_bias --> Learnable vecotr U_m^T
+            # Proj_key --> Embedding matrix V^c_m
+            # x_kv --> X_k
             energy = torch.matmul(appr_bias, proj_key).\
                 view(n, num_heads, 1, h_kv * w_kv)
             #print("Embed 1"); embed()
             h = 1
             w = 1
+        
+        # When sum of attention_type is greater than 1 or e1, e2 or e4 are used alone
         else:
             # (n, num_heads, h*w, h_kv*w_kv), query before key, 540mb for
+            # If attention is not projected with query and key content
             if not self.attention_type[0]:
+
+                # Initialize the E Term with tensor of size torch.Size([2,8, 50, 76, 25, 38])
                 energy = torch.zeros(
                     n,
                     num_heads,
@@ -289,7 +315,15 @@ class GeneralizedAttention(nn.Module):
             # attention_type[1]: appr - position
             # attention_type[2]: bias - appr
             # attention_type[3]: bias - position
+
+            # Project attention when e1 or e3 are included
             if self.attention_type[0] or self.attention_type[2]:
+
+                # Projects attention when e1 and e3 both are included
+                # proj_query --> Query content embedding matix torch.Size([2, 8, 3800,32]) --> U_m^T
+                # proj_key --> Key Content embedding matrix torch.Size([2,8,32,950]) --> V_m^c
+                # self.appr_bias --> Learnable vector u_m^t
+                # z_q^t --> x_q for e1 formula
                 if self.attention_type[0] and self.attention_type[2]:
                     appr_bias = self.appr_bias.\
                         view(1, num_heads, 1, self.qk_embed_dim)    #appr_bias size torch.Size([2, 8, 1, 32])
@@ -300,40 +334,64 @@ class GeneralizedAttention(nn.Module):
                 elif self.attention_type[0]:
                     energy = torch.matmul(proj_query, proj_key).\
                         view(n, num_heads, h, w, h_kv, w_kv)
-                    #print("Embed 2"); embed()
+                    #print("Embed 2"); embed
 
+                # Projects attention when e1 is only included
+                # proj_query --> Query content embedding matix torch.Size([2, 8, 3800,32]) --> U_m^T
+                # proj_key --> Key Content embedding matrix torch.Size([2,8,32,950]) --> V_m^c
+                elif self.attention_type[0]:
+                    energy = torch.matmul(proj_query, proj_key).\
+                        view(n, num_heads, h, w, h_kv, w_kv)
+                
+                # Projects attention when e3 is only included
+                # self.appr_bias --> Learnable vector u_m^t
+                # proj_key --> Key Content embedding matrix torch.Size([2,8,32,950]) --> V_m^c
                 elif self.attention_type[2]:
                     appr_bias = self.appr_bias.\
                         view(1, num_heads, 1, self.qk_embed_dim).\
                         repeat(n, 1, 1, 1)
 
+                    # energy --> torch.Size([2,8,50,76,25,38])
+                    # the torch.matmul returns a tensor of torch.Size([2,8,1,1,25,38])
+                    # It is broadcasted with the initialization to achieve the final size
                     energy += torch.matmul(appr_bias, proj_key).\
                         view(n, num_heads, 1, 1, h_kv, w_kv)
-                    #print("Embed 3"); embed()
-            #print("Embed 2"); embed()     
+
+            # Projects attention when e2 or e4 are included
             if self.attention_type[1] or self.attention_type[3]:
+
+                # Projects attention when both e2 and e4 are included
+                # self.geom_bias --> learnable vector small v_m^t in e4 torch.Size([256])
+                # proj_query_reshape --> Learnable embedding matrix for relative position encoding 
+                # Proj_query --> learnable embedding matric for query content
                 if self.attention_type[1] and self.attention_type[3]:
                     geom_bias = self.geom_bias.\
-                        view(1, num_heads, 1, self.qk_embed_dim)
+                        view(1, num_heads, 1, self.qk_embed_dim) # torch.size([1,8,1,32]) (1 batch, 8 channels, 1 height and 32 width)
 
                     proj_query_reshape = (proj_query + geom_bias).\
-                        view(n, num_heads, h, w, self.qk_embed_dim)
-
-                    #print("Embed 1"); embed()
+                        view(n, num_heads, h, w, self.qk_embed_dim) # torch.size([2,8,50,76,32])
+                    
+                    # Attention relative to x dimension
+                    # torch.Size([2,8,50,76,1,38]) --> a singleton is added after 76
                     energy_x = torch.matmul(
                         proj_query_reshape.permute(0, 1, 3, 2, 4),
                         position_feat_x.permute(0, 1, 2, 4, 3))
                     energy_x = energy_x.\
                         permute(0, 1, 3, 2, 4).unsqueeze(4)
 
+                    # Attention relative to x dimension
+                    # torch.Size([2,8,50,76,25,1]) --> a singleton is added after 25
                     energy_y = torch.matmul(
                         proj_query_reshape,
                         position_feat_y.permute(0, 1, 2, 4, 3))
                     energy_y = energy_y.unsqueeze(5)
 
+                    # Complete relative position attention weight
+                    # torch.Size([2,8,50,76,25,38]) 
                     energy += energy_x + energy_y
                     #print("Embed 2"); embed()
 
+                # Projects attention when e2 is included only
                 elif self.attention_type[1]:
                     proj_query_reshape = proj_query.\
                         view(n, num_heads, h, w, self.qk_embed_dim)
@@ -376,7 +434,8 @@ class GeneralizedAttention(nn.Module):
 
                     energy += energy_x + energy_y
                     #print("Embed 6"); embed()
-
+            
+            # torch.Size([2, 8, 50 * 76, 25 * 38])
             energy = energy.view(n, num_heads, h * w, h_kv * w_kv)
             #print("Embed 7"); embed()
         
@@ -384,12 +443,14 @@ class GeneralizedAttention(nn.Module):
             cur_local_constraint_map = \
                 self.local_constraint_map[:h, :w, :h_kv, :w_kv].\
                 contiguous().\
-                view(1, 1, h*w, h_kv*w_kv)
+                view(1, 1, h*w, h_kv*w_kv) '''Copies the tensor to give the the shape specified using contiguous'''
 
+            # Fills the tnesor element with -inf where the mask is true
             energy = energy.masked_fill_(cur_local_constraint_map,
                                          float('-inf'))
 
-        attention = F.softmax(energy, 3)    #Energy size torch.Size([2, 8, 1, 950])
+        # torch.Size([2, 8, 3800, 950])
+        attention = F.softmax(energy, 3)
 
         proj_value = self.value_conv(x_kv)
         proj_value_reshape = proj_value.\
