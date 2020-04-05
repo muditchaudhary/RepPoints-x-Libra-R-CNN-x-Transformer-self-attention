@@ -34,7 +34,7 @@ class GeneralizedAttention(nn.Module):
     def __init__(self,
                  in_dim,
                  spatial_range=-1,
-                 num_heads=9,
+                 num_heads=8,
                  position_embedding_dim=-1,
                  position_magnitude=1,
                  kv_stride=2,
@@ -160,44 +160,47 @@ class GeneralizedAttention(nn.Module):
                                device,
                                feat_dim,
                                wave_length=1000):
-        h_idxs = torch.linspace(0, h - 1, h).cuda(device)
-        h_idxs = h_idxs.view((h, 1)) * q_stride
-
+        # h=50 w=76
+        h_idxs = torch.linspace(0, h - 1, h).cuda(device) # torch.Size([50])
+        h_idxs = h_idxs.view((h, 1)) * q_stride #q_stride = 1
         w_idxs = torch.linspace(0, w - 1, w).cuda(device)
         w_idxs = w_idxs.view((w, 1)) * q_stride
-
-        h_kv_idxs = torch.linspace(0, h_kv - 1, h_kv).cuda(device)
-        h_kv_idxs = h_kv_idxs.view((h_kv, 1)) * kv_stride
+        h_kv_idxs = torch.linspace(0, h_kv - 1, h_kv).cuda(device) #h_kv = 25 torch.Size([25])
+        h_kv_idxs = h_kv_idxs.view((h_kv, 1)) * kv_stride #kv_stride = 2
 
         w_kv_idxs = torch.linspace(0, w_kv - 1, w_kv).cuda(device)
         w_kv_idxs = w_kv_idxs.view((w_kv, 1)) * kv_stride
 
         # (h, h_kv, 1)
-        h_diff = h_idxs.unsqueeze(1) - h_kv_idxs.unsqueeze(0)
+        h_diff = h_idxs.unsqueeze(1) - h_kv_idxs.unsqueeze(0) # torch.Size([50, 25, 1])
         h_diff *= self.position_magnitude
 
         # (w, w_kv, 1)
         w_diff = w_idxs.unsqueeze(1) - w_kv_idxs.unsqueeze(0)
         w_diff *= self.position_magnitude
 
-        feat_range = torch.arange(0, feat_dim / 4).cuda(device)
+        feat_range = torch.arange(0, feat_dim / 4).cuda(device) #feat_dim=256
 
-        dim_mat = torch.Tensor([wave_length]).cuda(device)
+        dim_mat = torch.Tensor([wave_length]).cuda(device) #tensor([1000.], device='cuda:0')
         dim_mat = dim_mat**((4. / feat_dim) * feat_range)
         dim_mat = dim_mat.view((1, 1, -1))
 
         embedding_x = torch.cat(
-            ((w_diff / dim_mat).sin(), (w_diff / dim_mat).cos()), dim=2)
+            ((w_diff / dim_mat).sin(), (w_diff / dim_mat).cos()), dim=2) # torch.Size([76, 38, 128])
 
         embedding_y = torch.cat(
-            ((h_diff / dim_mat).sin(), (h_diff / dim_mat).cos()), dim=2)
+            ((h_diff / dim_mat).sin(), (h_diff / dim_mat).cos()), dim=2) # torch.Size([50, 25, 128])
+
+        from IPython import embed
 
         return embedding_x, embedding_y
 
     def forward(self, x_input):
         num_heads = self.num_heads
-
+        #x_input.size torch.Size([2, 256, 50, 76])
         # use empirical_attention
+        #print("Generalized attention | check x_input")
+        #from IPython import embed; embed()
         if self.q_downsample is not None:
             x_q = self.q_downsample(x_input)
         else:
@@ -217,7 +220,8 @@ class GeneralizedAttention(nn.Module):
 
         if self.attention_type[0] or self.attention_type[2]:
             proj_key = self.key_conv(x_kv).view(
-                (n, num_heads, self.qk_embed_dim, h_kv * w_kv))
+                (n, num_heads, self.qk_embed_dim, h_kv * w_kv)) #proj key size torch.Size([2, 8, 32, 950])
+
 
         if self.attention_type[1] or self.attention_type[3]:
             position_embed_x, position_embed_y = self.get_position_embedding(
@@ -269,7 +273,7 @@ class GeneralizedAttention(nn.Module):
             if self.attention_type[0] or self.attention_type[2]:
                 if self.attention_type[0] and self.attention_type[2]:
                     appr_bias = self.appr_bias.\
-                        view(1, num_heads, 1, self.qk_embed_dim)
+                        view(1, num_heads, 1, self.qk_embed_dim)    #appr_bias size torch.Size([2, 8, 1, 32])
                     energy = torch.matmul(proj_query + appr_bias, proj_key).\
                         view(n, num_heads, h, w, h_kv, w_kv)
 
@@ -303,6 +307,9 @@ class GeneralizedAttention(nn.Module):
                         proj_query_reshape,
                         position_feat_y.permute(0, 1, 2, 4, 3))
                     energy_y = energy_y.unsqueeze(5)
+
+                    from IPython import embed;
+                    embed()
 
                     energy += energy_x + energy_y
 
@@ -356,20 +363,21 @@ class GeneralizedAttention(nn.Module):
             energy = energy.masked_fill_(cur_local_constraint_map,
                                          float('-inf'))
 
-        attention = F.softmax(energy, 3)
+        attention = F.softmax(energy, 3)    #Energy size torch.Size([2, 8, 1, 950])
 
         proj_value = self.value_conv(x_kv)
         proj_value_reshape = proj_value.\
             view((n, num_heads, self.v_dim, h_kv * w_kv)).\
             permute(0, 1, 3, 2)
 
-        out = torch.matmul(attention, proj_value_reshape).\
-            permute(0, 1, 3, 2).\
-            contiguous().\
-            view(n, self.v_dim * self.num_heads, h, w)
+        out = torch.matmul(attention, proj_value_reshape).permute(0, 1, 3, 2).contiguous().view(n, self.v_dim * self.num_heads, h, w)
+        # out size torch.Size([2, 256, 1, 1])
 
-        out = self.proj_conv(out)
-        out = self.gamma * out + x_input
+        out = self.proj_conv(out) # torch.Size([2, 256, 1, 1])
+
+        out = self.gamma * out + x_input    #gamma size ([1])
+        # out size torch.Size([2, 256, 50, 76])
+
         return out
 
     def init_weights(self):
