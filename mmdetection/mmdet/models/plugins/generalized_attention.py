@@ -191,7 +191,7 @@ class GeneralizedAttention(nn.Module):
         embedding_y = torch.cat(
             ((h_diff / dim_mat).sin(), (h_diff / dim_mat).cos()), dim=2) # torch.Size([50, 25, 128])
 
-        from IPython import embed
+
 
         return embedding_x, embedding_y
 
@@ -200,7 +200,6 @@ class GeneralizedAttention(nn.Module):
         #x_input.size torch.Size([2, 256, 50, 76])
         # use empirical_attention
         #print("Generalized attention | check x_input")
-        #from IPython import embed; embed()
         if self.q_downsample is not None:
             x_q = self.q_downsample(x_input)
         else:
@@ -307,9 +306,6 @@ class GeneralizedAttention(nn.Module):
                         proj_query_reshape,
                         position_feat_y.permute(0, 1, 2, 4, 3))
                     energy_y = energy_y.unsqueeze(5)
-
-                    from IPython import embed;
-                    embed()
 
                     energy += energy_x + energy_y
 
