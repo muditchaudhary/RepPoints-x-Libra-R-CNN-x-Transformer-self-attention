@@ -88,7 +88,7 @@ class NovelKQRAttention(nn.Module):
                 stride = self.dconv_stride,
                 padding = 1,
                 dilation =1,
-                deformable_group = self.deformable_group,
+                deformable_groups = self.deformable_group,
                 bias = False)
 
         self.v_dim = in_dim // num_heads
