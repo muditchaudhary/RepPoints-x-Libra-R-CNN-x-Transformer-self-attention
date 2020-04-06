@@ -233,6 +233,11 @@ class NovelKQRAttention(nn.Module):
                     energy+= torch.matmul(appr_bias_qRelPos,proj_query_relativePos).\
                             view(n,num_heads,h,w,1,1)
 
+                    print("Inside E1")
+                    from IPython import embed;
+                    embed()
+
+
             energy = energy.view(n,num_heads,h*w,h_kv*w_kv)
 
         if self.spatial_range >= 0:
@@ -244,7 +249,15 @@ class NovelKQRAttention(nn.Module):
             energy = energy.masked_fill_(cur_local_constraint_map,
                                          float('-inf'))
 
+        print("Before Softmax")
+        from IPython import embed;
+        embed()
+
         attention = F.softmax(energy, 3)
+
+        print("After Softmax")
+        from IPython import embed;
+        embed()
 
         proj_value = self.value_conv(x_kv)
         proj_value_reshape = proj_value.\
@@ -257,7 +270,16 @@ class NovelKQRAttention(nn.Module):
             view(n, self.v_dim * self.num_heads, h, w)
 
         out = self.proj_conv(out)
+
+        print("Before final out")
+        from IPython import embed;
+        embed()
+
         out = self.gamma * out + x_input
+
+        print("After final out")
+        from IPython import embed;
+        embed()
         return out
 
     def init_weights(self):
