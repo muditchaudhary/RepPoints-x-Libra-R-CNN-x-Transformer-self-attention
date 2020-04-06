@@ -42,7 +42,7 @@ class NovelKQRAttention(nn.Module):
                  attention_type='0110',
                  deformable_group=1,
                  dconv_stride = 1,
-                 dconv_learnable_vector = False):
+                 dconv_learnable_vector = True):
 
         super(NovelKQRAttention, self).__init__()
 
@@ -64,7 +64,7 @@ class NovelKQRAttention(nn.Module):
         out_c = self.qk_embed_dim * num_heads
 
 
-        if self.attention_type[0] or self.attention_type[2]:
+        if self.attention_type[2]:
             self.key_conv = nn.Conv2d(
                 in_channels=in_dim,
                 out_channels=out_c,
@@ -79,8 +79,7 @@ class NovelKQRAttention(nn.Module):
                 kernel_size=3,
                 padding=1,
                 dilation=1,
-                bias=False
-            )
+                bias=False)
 
             self.query_dconv=DeformConv(
                 in_channels =in_dim,
@@ -90,8 +89,7 @@ class NovelKQRAttention(nn.Module):
                 padding = 1,
                 dilation =1,
                 deformable_group = self.deformable_group,
-                bias = False
-            )
+                bias = False)
 
         self.v_dim = in_dim // num_heads
         self.value_conv = nn.Conv2d(
@@ -181,7 +179,7 @@ class NovelKQRAttention(nn.Module):
         _, _, h_kv, w_kv = x_kv.shape
 
 
-        if self.attention_type[0] or self.attention_type[2]:
+        if self.attention_type[2]:
             proj_key = self.key_conv(x_kv).view(
                 (n, num_heads, self.qk_embed_dim, h_kv * w_kv))
 
@@ -223,9 +221,8 @@ class NovelKQRAttention(nn.Module):
                         view(n, num_heads, 1, 1, h_kv, w_kv)
 
             # Query Content and Relative Position
-            if self.attention_type[1] or self.attention_type[3]:
+            if self.attention_type[1]:
 
-                proj_query_relativePos = proj_query_relativePos
                 if self.dconv_learnable_vector == False :
                     energy+=proj_query_relativePos.view(n,num_heads,h,w,1,1)
 
@@ -236,6 +233,7 @@ class NovelKQRAttention(nn.Module):
                     energy+= torch.matmul(appr_bias_qRelPos,proj_query_relativePos).\
                             view(n,num_heads,h,w,1,1)
 
+            energy = energy.view(n,num_heads,h*w,h_kv*w_kv)
 
         if self.spatial_range >= 0:
             cur_local_constraint_map = \

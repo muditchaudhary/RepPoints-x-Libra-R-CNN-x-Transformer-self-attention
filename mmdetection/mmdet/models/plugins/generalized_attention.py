@@ -333,6 +333,9 @@ class GeneralizedAttention(nn.Module):
 
                     energy += energy_x + energy_y
 
+                    print("Inside E1")
+                    from IPython import embed; embed()
+
                 elif self.attention_type[3]:
                     geom_bias = self.geom_bias.\
                         view(1, num_heads, self.qk_embed_dim, 1).\
@@ -363,7 +366,13 @@ class GeneralizedAttention(nn.Module):
             energy = energy.masked_fill_(cur_local_constraint_map,
                                          float('-inf'))
 
+        print("Before Softmax")
+        from IPython import embed; embed()
+
         attention = F.softmax(energy, 3)    #Energy size torch.Size([2, 8, 1, 950])
+
+        print("After Softmax")
+        from IPython import embed; embed()
 
         proj_value = self.value_conv(x_kv)
         proj_value_reshape = proj_value.\
@@ -374,9 +383,14 @@ class GeneralizedAttention(nn.Module):
         # out size torch.Size([2, 256, 1, 1])
 
         out = self.proj_conv(out) # torch.Size([2, 256, 1, 1])
+        print("Before final out")
+        from IPython import embed; embed()
 
         out = self.gamma * out + x_input    #gamma size ([1])
         # out size torch.Size([2, 256, 50, 76])
+        print("After final out")
+        from IPython import embed; embed()
+
 
         return out
 
