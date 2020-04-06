@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import kaiming_init
+from mmdet.ops import DeformConv
 
-
-class GeneralizedAttention(nn.Module):
-    """GeneralizedAttention module.
+class NovelKQRAttention(nn.Module):
+    """Modified GeneralizedAttention module.
 
     See 'An Empirical Study of Spatial Attention Mechanisms in Deep Networks'
     (https://arxiv.org/abs/1711.07971) for details.
@@ -39,9 +39,12 @@ class GeneralizedAttention(nn.Module):
                  position_magnitude=1,
                  kv_stride=2,
                  q_stride=1,
-                 attention_type='1111'):
+                 attention_type='0110',
+                 deformable_group=1,
+                 dconv_stride = 1,
+                 dconv_learnable_vector = False):
 
-        super(GeneralizedAttention, self).__init__()
+        super(NovelKQRAttention, self).__init__()
 
         # hard range means local range for non-local operation
         self.position_embedding_dim = (
@@ -55,7 +58,11 @@ class GeneralizedAttention(nn.Module):
         self.q_stride = q_stride
         self.attention_type = [bool(int(_)) for _ in attention_type]
         self.qk_embed_dim = in_dim // num_heads
+        self.deformable_group = deformable_group
+        self.dconv_stride = dconv_stride
+        self.dconv_learnable_vector = dconv_learnable_vector
         out_c = self.qk_embed_dim * num_heads
+
 
         if self.attention_type[0] or self.attention_type[2]:
             self.key_conv = nn.Conv2d(
@@ -64,6 +71,27 @@ class GeneralizedAttention(nn.Module):
                 kernel_size=1,
                 bias=False)
             self.key_conv.kaiming_init = True
+
+        if self.attention_type[1]:
+            self.query_conv_offset = nn.Conv2d(
+                in_channels=in_dim,
+                out_channels=self.deformable_group * 18,
+                kernel_size=3,
+                padding=1,
+                dilation=1,
+                bias=False
+            )
+
+            self.query_dconv=DeformConv(
+                in_channels =in_dim,
+                out_channels = out_c,
+                kernel_size=3,
+                stride = self.dconv_stride,
+                padding = 1,
+                dilation =1,
+                deformable_group = self.deformable_group,
+                bias = False
+            )
 
         self.v_dim = in_dim // num_heads
         self.value_conv = nn.Conv2d(
@@ -78,6 +106,12 @@ class GeneralizedAttention(nn.Module):
             stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
             appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv
             self.appr_bias = nn.Parameter(appr_bias_value)
+
+        if self.attention_type[1] and self.dconv_learnable_vector == True :
+            stdv = 1.0 / math.sqrt(self.qk_embed_dim * 2)
+            appr_bias_qRelPos = -2 * stdv * torch.rand(out_c) + stdv
+            self.appr_bias_qRelPos = nn.Parameter(appr_bias_qRelPos)
+
 
         self.proj_conv = nn.Conv2d(
             in_channels=self.v_dim * num_heads,
@@ -151,6 +185,10 @@ class GeneralizedAttention(nn.Module):
             proj_key = self.key_conv(x_kv).view(
                 (n, num_heads, self.qk_embed_dim, h_kv * w_kv))
 
+        if self.attention_type[1]:
+            offset = self.query_conv_offset(x_q)
+            proj_query_relativePos =self.query_dconv(x_q,offset).view(n,num_heads,self.qk_embed_dim,h*w)
+
 
         # accelerate for saliency only
         if (np.sum(self.attention_type) == 1) and self.attention_type[2]:
@@ -163,6 +201,41 @@ class GeneralizedAttention(nn.Module):
 
             h = 1
             w = 1
+        else:
+            if not self.attention_type[0]:
+                energy = torch.zeros(
+                    n,
+                    num_heads,
+                    h,
+                    w,
+                    h_kv,
+                    w_kv,
+                    dtype=x_input.dtype,
+                    device=x_input.device)
+
+            # Key Content
+            if self.attention_type[2]:
+                appr_bias = self.appr_bias.\
+                    view(1, num_heads, 1, self.qk_embed_dim).\
+                    repeat(n, 1, 1, 1)
+
+                energy += torch.matmul(appr_bias, proj_key).\
+                        view(n, num_heads, 1, 1, h_kv, w_kv)
+
+            # Query Content and Relative Position
+            if self.attention_type[1] or self.attention_type[3]:
+
+                proj_query_relativePos = proj_query_relativePos
+                if self.dconv_learnable_vector == False :
+                    energy+=proj_query_relativePos.view(n,num_heads,h,w,1,1)
+
+                else:
+                    appr_bias_qRelPos = self.appr_bias_qRelPos.\
+                        view(1,num_heads,1,self.qk_embed_dim).\
+                        repeat(n,1,1,1)
+                    energy+= torch.matmul(appr_bias_qRelPos,proj_query_relativePos).\
+                            view(n,num_heads,h,w,1,1)
+
 
         if self.spatial_range >= 0:
             cur_local_constraint_map = \
