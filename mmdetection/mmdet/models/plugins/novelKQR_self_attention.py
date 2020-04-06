@@ -233,7 +233,7 @@ class NovelKQRAttention(nn.Module):
                     energy+= torch.matmul(appr_bias_qRelPos,proj_query_relativePos).\
                             view(n,num_heads,h,w,1,1)
 
-                    print("Inside E1")
+                    print("Inside E1 KQR")
                     from IPython import embed;
                     embed()
 
