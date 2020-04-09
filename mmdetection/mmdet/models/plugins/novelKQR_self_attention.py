@@ -42,6 +42,7 @@ class NovelKQRAttention(nn.Module):
                  attention_type='0110',
                  deformable_group=1,
                  dconv_stride = 1,
+                 dconv_groups =1,
                  dconv_learnable_vector = True):
 
         super(NovelKQRAttention, self).__init__()
@@ -61,6 +62,7 @@ class NovelKQRAttention(nn.Module):
         self.deformable_group = deformable_group
         self.dconv_stride = dconv_stride
         self.dconv_learnable_vector = dconv_learnable_vector
+        self.dconv_groups = dconv_groups
         out_c = self.qk_embed_dim * num_heads
 
 
@@ -89,6 +91,7 @@ class NovelKQRAttention(nn.Module):
                 padding = 1,
                 dilation =1,
                 deformable_groups = self.deformable_group,
+                groups= self.dconv_groups,
                 bias = False)
 
         self.v_dim = in_dim // num_heads
