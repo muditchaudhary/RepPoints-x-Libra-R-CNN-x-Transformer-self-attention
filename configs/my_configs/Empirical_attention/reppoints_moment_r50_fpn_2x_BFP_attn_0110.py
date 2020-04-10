@@ -136,12 +136,12 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 12
+total_epochs = 24
 device_ids = range(5)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/reppoints_moment_r50_fpn_2x_BFP'
 load_from = None
-resume_from = None #'./work_dirs/reppoints_moment_r50_fpn_2x_BFP_attn_0010/latest.pth'
+resume_from = './work_dirs/reppoints_moment_r50_fpn_2x_BFP_attn_0010/latest.pth'
 auto_resume = True
 workflow = [('train', 1)]
