@@ -6,7 +6,8 @@ from mmcv.cnn import constant_init, kaiming_init
 from mmcv.runner import load_checkpoint
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from mmdet.models.plugins import NovelKQRAttention as GeneralizedAttention
+from mmdet.models.plugins import GeneralizedAttention
+from mmdet.models.plugins import NovelKQRAttention
 from mmdet.ops import ContextBlock, DeformConv, ModulatedDeformConv
 from ..registry import BACKBONES
 from ..utils import build_conv_layer, build_norm_layer
@@ -98,7 +99,8 @@ class Bottleneck(nn.Module):
                  norm_cfg=dict(type='BN'),
                  dcn=None,
                  gcb=None,
-                 gen_attention=None):
+                 gen_attention=None,
+                 kqr_attention=None):
         """Bottleneck block for ResNet.
         If style is "pytorch", the stride-two layer is the 3x3 conv layer,
         if it is "caffe", the stride-two layer is the first 1x1 conv layer.
@@ -108,6 +110,7 @@ class Bottleneck(nn.Module):
         assert dcn is None or isinstance(dcn, dict)
         assert gcb is None or isinstance(gcb, dict)
         assert gen_attention is None or isinstance(gen_attention, dict)
+        assert kqr_attention is None or isinstance(kqr_attention,dict)
 
         self.inplanes = inplanes
         self.planes = planes
@@ -123,6 +126,8 @@ class Bottleneck(nn.Module):
         self.with_gcb = gcb is not None
         self.gen_attention = gen_attention
         self.with_gen_attention = gen_attention is not None
+        self.kqr_attention = kqr_attention
+        self.with_kqr_attention = kqr_attention is not None
 
         if self.style == 'pytorch':
             self.conv1_stride = 1
@@ -205,6 +210,11 @@ class Bottleneck(nn.Module):
             self.gen_attention_block = GeneralizedAttention(
                 planes, **gen_attention)
 
+        # KQR attention
+        if self.with_kqr_attention:
+            self.kqr_attention_block = NovelKQRAttention(
+                planes, **kqr_attention)
+
     @property
     def norm1(self):
         return getattr(self, self.norm1_name)
@@ -241,6 +251,9 @@ class Bottleneck(nn.Module):
 
             if self.with_gen_attention:
                 out = self.gen_attention_block(out)
+
+            if self.with_kqr_attention:
+                out = self.kqr_attention_block(out)
 
             out = self.conv3(out)
             out = self.norm3(out)
