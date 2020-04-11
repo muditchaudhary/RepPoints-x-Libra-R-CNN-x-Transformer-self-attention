@@ -175,7 +175,6 @@ class NovelKQRAttention(nn.Module):
         else:
             x_q = x_input
         n, _, h, w = x_q.shape
-        h, w = h//self.dconv_stride, w//self.dconv_stride
 
         if self.kv_downsample is not None:
             x_kv = self.kv_downsample(x_input)
