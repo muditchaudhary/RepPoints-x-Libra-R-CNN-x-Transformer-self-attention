@@ -192,6 +192,7 @@ class NovelKQRAttention(nn.Module):
 
         if self.attention_type[1]:
             offset = self.query_conv_offset(x_q)
+            from IPython import embed; embed()
             proj_query_relativePos =self.query_dconv(x_q,offset).view(n,num_heads,self.qk_embed_dim,h*w)
 
 
