@@ -265,7 +265,7 @@ class NovelKQRAttention(nn.Module):
 
         out = self.proj_conv(out)
 
-
+        from IPython import embed;embed()
         out = self.gamma * out + x_input
 
         return out
