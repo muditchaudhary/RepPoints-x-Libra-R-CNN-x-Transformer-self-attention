@@ -272,7 +272,7 @@ class NovelKQRAttention(nn.Module):
             out = F.interpolate(out,scale_factor=self.dconv_stride)
 
         if self.q_stride > 1:
-            out = F.interpolate(out,scale_factor=self.q_stride)
+            out = F.interpolate(out,size=x_input.size())
 
         out = self.gamma * out + x_input
 
