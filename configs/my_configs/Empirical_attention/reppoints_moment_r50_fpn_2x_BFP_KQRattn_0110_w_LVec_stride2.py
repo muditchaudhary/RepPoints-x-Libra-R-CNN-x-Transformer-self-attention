@@ -11,7 +11,7 @@ model = dict(
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         style='pytorch',
-        kqr_attention=dict(spatial_range=-1, num_heads=8, attention_type='0110', kv_stride=2, dconv_stride =1),
+        kqr_attention=dict(spatial_range=-1, num_heads=8, attention_type='0110', kv_stride=2, dconv_stride =2),
         stage_with_gen_attention=[[], [], [0, 1, 2, 3, 4, 5], [0, 1, 2]],
     ),
     neck=[
@@ -142,6 +142,6 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/reppoints_moment_r50_fpn_2x_BFP'
 load_from = None
-resume_from = './work_dirs/reppoints_moment_r50_fpn_2x_BFP_KQRattn_0110_w_LVec_stride2/latest.pth'
+resume_from = None #'./work_dirs/reppoints_moment_r50_fpn_2x_BFP_KQRattn_0110_w_LVec_stride2/latest.pth'
 auto_resume = True
 workflow = [('train', 1)]
