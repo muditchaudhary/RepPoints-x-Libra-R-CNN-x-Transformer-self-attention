@@ -28,10 +28,12 @@ class BasicBlock(nn.Module):
                  norm_cfg=dict(type='BN'),
                  dcn=None,
                  gcb=None,
-                 gen_attention=None):
+                 gen_attention=None,
+                 kqr_attention = None):
         super(BasicBlock, self).__init__()
         assert dcn is None, "Not implemented yet."
         assert gen_attention is None, "Not implemented yet."
+        assert kqr_attention is None, "Not implemented yet."
         assert gcb is None, "Not implemented yet."
 
         self.norm1_name, norm1 = build_norm_layer(norm_cfg, planes, postfix=1)
@@ -291,6 +293,7 @@ def make_res_layer(block,
                    dcn=None,
                    gcb=None,
                    gen_attention=None,
+                   kqr_attention=None,
                    gen_attention_blocks=[]):
     downsample = None
     if stride != 1 or inplanes != planes * block.expansion:
@@ -320,6 +323,8 @@ def make_res_layer(block,
             dcn=dcn,
             gcb=gcb,
             gen_attention=gen_attention if
+            (0 in gen_attention_blocks) else None,
+            kqr_attention=kqr_attention if
             (0 in gen_attention_blocks) else None))
     inplanes = planes * block.expansion
     for i in range(1, blocks):
@@ -336,6 +341,8 @@ def make_res_layer(block,
                 dcn=dcn,
                 gcb=gcb,
                 gen_attention=gen_attention if
+                (i in gen_attention_blocks) else None,
+                kqr_attention=kqr_attention if
                 (i in gen_attention_blocks) else None))
 
     return nn.Sequential(*layers)
@@ -390,6 +397,7 @@ class ResNet(nn.Module):
                  gcb=None,
                  stage_with_gcb=(False, False, False, False),
                  gen_attention=None,
+                 kqr_attention=None,
                  stage_with_gen_attention=((), (), (), ()),
                  with_cp=False,
                  zero_init_residual=True):
@@ -415,6 +423,7 @@ class ResNet(nn.Module):
         if dcn is not None:
             assert len(stage_with_dcn) == num_stages
         self.gen_attention = gen_attention
+        self.kqr_attention = kqr_attention
         self.gcb = gcb
         self.stage_with_gcb = stage_with_gcb
         if gcb is not None:
@@ -447,6 +456,7 @@ class ResNet(nn.Module):
                 dcn=dcn,
                 gcb=gcb,
                 gen_attention=gen_attention,
+                kqr_attention=kqr_attention,
                 gen_attention_blocks=stage_with_gen_attention[i])
             self.inplanes = planes * self.block.expansion
             layer_name = 'layer{}'.format(i + 1)
