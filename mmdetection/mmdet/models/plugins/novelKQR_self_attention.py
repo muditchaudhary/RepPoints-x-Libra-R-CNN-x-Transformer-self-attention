@@ -176,6 +176,9 @@ class NovelKQRAttention(nn.Module):
             x_q = x_input
         n, _, h, w = x_q.shape
 
+        if self.dconv_stride > 1:
+            h,w = h//self.dconv_stride, w//self.dconv_stride
+
         if self.kv_downsample is not None:
             x_kv = self.kv_downsample(x_input)
         else:
@@ -265,10 +268,12 @@ class NovelKQRAttention(nn.Module):
 
         out = self.proj_conv(out)
 
+        if self.dconv_stride > 1:
+            out = F.interpolate(out,scale_factor=self.dconv_stride)
+
         if self.q_stride > 1:
             out = F.interpolate(out,scale_factor=self.q_stride)
 
-        from IPython import embed;embed()
         out = self.gamma * out + x_input
 
         return out
