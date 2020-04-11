@@ -265,6 +265,9 @@ class NovelKQRAttention(nn.Module):
 
         out = self.proj_conv(out)
 
+        if self.q_stride > 1:
+            out = F.interpolate(out,scale_factor=self.q_stride)
+
         from IPython import embed;embed()
         out = self.gamma * out + x_input
 
