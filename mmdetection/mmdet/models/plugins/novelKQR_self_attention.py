@@ -80,6 +80,7 @@ class NovelKQRAttention(nn.Module):
                 out_channels=self.deformable_group * 18,
                 kernel_size=3,
                 padding=1,
+                stride = self.dconv_stride,
                 dilation=1,
                 bias=False)
 
