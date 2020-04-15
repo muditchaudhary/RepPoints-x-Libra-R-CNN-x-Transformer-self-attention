@@ -5,7 +5,7 @@ from mmcv.cnn import xavier_init
 from ..plugins import NonLocal2D
 from ..registry import NECKS
 from ..utils import ConvModule
-from mmdet.models.plugins import GeneralizedAttention
+from mmdet.models.plugins import GeneralizedAttention, NovelKQRAttention
 
 
 
@@ -37,10 +37,13 @@ class BFP(nn.Module):
                  refine_type=None,
                  conv_cfg=None,
                  norm_cfg=None,
-                 gen_attention=None):
+                 gen_attention=None,
+                 kqr_attention=None):
         super(BFP, self).__init__()
-        assert refine_type in [None, 'conv', 'non_local','transformer']
+        assert refine_type in [None, 'conv', 'non_local','transformer','kqr_attention']
         assert gen_attention is None or isinstance(gen_attention,dict)
+        assert kqr_attention is None or isinstance(kqr_attention,dict)
+
 
         self.in_channels = in_channels
         self.num_levels = num_levels
@@ -68,6 +71,9 @@ class BFP(nn.Module):
                 norm_cfg=self.norm_cfg)
         elif self.refine_type == 'transformer':
             self.refine= GeneralizedAttention(self.in_channels,**gen_attention)
+
+        elif self.refine_type == 'kqr_attention':
+            self.refine= NovelKQRAttention(self.in_channels,**kqr_attention)
 
     def init_weights(self):
         for m in self.modules():
