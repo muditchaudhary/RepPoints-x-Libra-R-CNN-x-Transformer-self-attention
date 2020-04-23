@@ -6,6 +6,7 @@ from ..plugins import NonLocal2D
 from ..registry import NECKS
 from ..utils import ConvModule
 from mmdet.models.plugins import GeneralizedAttention, NovelKQRAttention
+from mmdet.ops import DeformConv
 
 
 
@@ -38,7 +39,8 @@ class BFP(nn.Module):
                  conv_cfg=None,
                  norm_cfg=None,
                  gen_attention=None,
-                 kqr_attention=None):
+                 kqr_attention=None,
+                 dcn = False):
         super(BFP, self).__init__()
         assert refine_type in [None, 'conv', 'non_local','transformer','kqr_attention']
         assert gen_attention is None or isinstance(gen_attention,dict)
@@ -52,7 +54,27 @@ class BFP(nn.Module):
 
         self.refine_level = refine_level
         self.refine_type = refine_type
+        self.dcn = dcn
         assert 0 <= self.refine_level < self.num_levels
+
+        if self.dcn is True:
+            self.dconv_offset = nn.Conv2d(
+                in_channels=in_channels,
+                out_channels=18,
+                kernel_size=3,
+                padding=1,
+                stride=1,
+                dilation=1,
+                bias=False)
+
+            self.dconv = DeformConv(
+                in_channels=in_channels,
+                out_channels=in_channels,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                dilation=1,
+                bias=False)
 
         if self.refine_type == 'conv':
             self.refine = ConvModule(
@@ -70,6 +92,7 @@ class BFP(nn.Module):
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg)
         elif self.refine_type == 'transformer':
+
             self.refine= GeneralizedAttention(self.in_channels,**gen_attention)
 
         elif self.refine_type == 'kqr_attention':
@@ -97,6 +120,9 @@ class BFP(nn.Module):
         bsf = sum(feats) / len(feats)
 
         # step 2: refine gathered features
+        if self.dcn is True:
+            offset=self.dconv_offset(bsf)
+            bsf = self.dconv(bsf,offset)
         if self.refine_type is not None:
             bsf = self.refine(bsf)
 
