@@ -1,6 +1,11 @@
-# RepPoints: Point Set Representation for Object Detection
+# RepPoints x Libra-RCNN x Transformer Attention
+This repository builds upon the RepPoints model by Yang et.al. We balance the training of the model
+using Libra R-CNN and then further improve the performance using Transformer Attention.  
+We also implement our KQRAttention mechanism to improve the inference speed of the model.
+### ReadMe to be updated soon with more details.
 
-By [Ze Yang](https://yangze.tech/), [Shaohui Liu](http://b1ueber2y.me/), and [Han Hu](https://ancientmooner.github.io/).
+### ReadMe from RepPoints Repository:
+[Ze Yang](https://yangze.tech/), [Shaohui Liu](http://b1ueber2y.me/), and [Han Hu](https://ancientmooner.github.io/).
 
 We provide code support and configuration files to reproduce the results in the paper for
 ["RepPoints: Point Set Representation for Object Detection"](https://arxiv.org/abs/1904.11490) on COCO object detection. Our code is based on [mmdetection](https://github.com/open-mmlab/mmdetection), which is a clean open-sourced project for benchmarking object detection methods. 
@@ -78,7 +83,7 @@ The results on COCO 2017val are shown in the table below.
 - `moment`, `partial MinMax`, `MinMax` in the `convert func` column are three functions to convert a point set to a pseudo box.
 - `ms` denotes multi-scale training or multi-scale test.
 - Note the results here are slightly different from those reported in the paper, due to framework change. While the original paper uses an [MXNet](https://mxnet.apache.org/) implementation, we re-implement the method in [PyTorch](https://pytorch.org/) based on mmdetection.
-
+y [Ze Ya
 # Contributing
 This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
 
