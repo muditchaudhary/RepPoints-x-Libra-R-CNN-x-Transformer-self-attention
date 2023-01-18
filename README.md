@@ -4,7 +4,7 @@ using Libra R-CNN and then further improve the performance using Transformer Att
 We also implement our KQRAttention mechanism to improve the inference speed of the model.
 ### ReadMe to be updated soon with more details.
 
-### ReadMe from RepPoints Repository:
+
 [Ze Yang](https://yangze.tech/), [Shaohui Liu](http://b1ueber2y.me/), and [Han Hu](https://ancientmooner.github.io/).
 
 We provide code support and configuration files to reproduce the results in the paper for
